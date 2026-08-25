@@ -33,6 +33,13 @@ import DirectorFranchises from './pages/Director/DirectorFranchises';
 import DirectorManagers from './pages/Director/DirectorManagers';
 import DirectorRankings from './pages/Director/DirectorRankings';
 
+// Head Coordinator Layout & Pages
+import CoordinatorLayout from './layouts/CoordinatorLayout';
+import CoordinatorDashboard from './pages/HeadCoordinator/CoordinatorDashboard';
+import StateHeadOperations from './pages/HeadCoordinator/StateHeadOperations';
+import StateComparison from './pages/HeadCoordinator/StateComparison';
+import CoordinatorApprovals from './pages/HeadCoordinator/CoordinatorApprovals';
+
 import UserLayout from './layouts/UserLayout';
 import UserDashboard from './pages/UserDashboard';
 
@@ -82,6 +89,15 @@ const App = () => {
           <Route path="franchises" element={<DirectorFranchises />} />
           <Route path="managers" element={<DirectorManagers />} />
           <Route path="rankings" element={<DirectorRankings />} />
+        </Route>
+
+        {/* Head Coordinator Section */}
+        <Route path="/head-coordinator" element={<CoordinatorLayout />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<CoordinatorDashboard />} />
+          <Route path="state-heads" element={<StateHeadOperations />} />
+          <Route path="comparison" element={<StateComparison />} />
+          <Route path="approvals" element={<CoordinatorApprovals />} />
         </Route>
 
         {/* User Section with Persistent Layout */}
