@@ -7,7 +7,7 @@ import {
 import Logo from '../../assets/logo.png'
 
 const adminNavItems = [
-    { label: 'Operational Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
+    { label: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
     { label: 'Franchise Directory', path: '/admin/franchises', icon: Store },
     { label: 'New Franchise Signup', path: '/admin/signup-new', icon: UserPlus },
     { label: 'Franchise Leads CRM', path: '/admin/leads', icon: Users },

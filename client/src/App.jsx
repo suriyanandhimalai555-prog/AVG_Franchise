@@ -25,6 +25,14 @@ import DailyEntries from './pages/Admin/DailyEntries';
 import HierarchyManagement from './pages/Admin/HierarchyManagement';
 import { OperationalApprovals, OperationalReports } from './pages/Admin/OperationalApprovals';
 
+// Director Layout & Separate Pages
+import DirectorLayout from './layouts/DirectorLayout';
+import DirectorDashboard from './pages/Director/DirectorDashboard';
+import DirectorTerritories from './pages/Director/DirectorTerritories';
+import DirectorFranchises from './pages/Director/DirectorFranchises';
+import DirectorManagers from './pages/Director/DirectorManagers';
+import DirectorRankings from './pages/Director/DirectorRankings';
+
 import UserLayout from './layouts/UserLayout';
 import UserDashboard from './pages/UserDashboard';
 
@@ -64,6 +72,16 @@ const App = () => {
           <Route path="hierarchy" element={<HierarchyManagement />} />
           <Route path="approvals" element={<OperationalApprovals />} />
           <Route path="reports" element={<OperationalReports />} />
+        </Route>
+
+        {/* Director Section */}
+        <Route path="/director" element={<DirectorLayout />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<DirectorDashboard />} />
+          <Route path="territories" element={<DirectorTerritories />} />
+          <Route path="franchises" element={<DirectorFranchises />} />
+          <Route path="managers" element={<DirectorManagers />} />
+          <Route path="rankings" element={<DirectorRankings />} />
         </Route>
 
         {/* User Section with Persistent Layout */}
