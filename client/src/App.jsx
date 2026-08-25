@@ -25,7 +25,7 @@ import DailyEntries from './pages/Admin/DailyEntries';
 import HierarchyManagement from './pages/Admin/HierarchyManagement';
 import { OperationalApprovals, OperationalReports } from './pages/Admin/OperationalApprovals';
 
-// Director Layout & Separate Pages
+// Director Layout & Pages
 import DirectorLayout from './layouts/DirectorLayout';
 import DirectorDashboard from './pages/Director/DirectorDashboard';
 import DirectorTerritories from './pages/Director/DirectorTerritories';
