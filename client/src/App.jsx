@@ -2,8 +2,9 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Signup';
+import ProtectedRoute from './components/ProtectedRoute';
 
-// Superadmin layout & Pages
+// Superadmin Layout & Pages
 import SuperAdminLayout from './layouts/SuperAdminLayout';
 import SuperAdminDashboard from './pages/SuperAdmin/SuperAdminDashboard';
 import RoleManagement from './pages/SuperAdmin/RoleManagement';
@@ -59,15 +60,11 @@ import FranchiseVisits from './pages/SalesManager/FranchiseVisits';
 // Franchise Layout & Pages
 import FranchiseLayout from './layouts/FranchiseLayout';
 import FranchiseDashboard from './pages/Franchise/FranchiseDashboard';
-import FranchiseDailyEntries from './pages/Franchise/FranchiseDailyEntries';
 import Collections from './pages/Franchise/Collections';
 import Customers from './pages/Franchise/Customers';
 import Leads from './pages/Franchise/Leads';
 import CommissionEarnings from './pages/Franchise/CommissionEarnings';
 import PendingTasks from './pages/Franchise/PendingTasks';
-
-const AdminRoles = () => <div className="text-xl font-bold text-slate-800">Admin Roles Page</div>;
-const UserRoles = () => <div className="text-xl font-bold text-slate-800">User Roles Page</div>;
 
 const App = () => {
   return (
@@ -77,83 +74,96 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Register />} />
 
-        {/* Super Admin Section */}
-        <Route path="/super-admin" element={<SuperAdminLayout />}>
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<SuperAdminDashboard />} />
-          <Route path="roles" element={<RoleManagement />} />
-          <Route path="users" element={<UserManagement />} />
-          <Route path="businesses" element={<BusinessVerticals />} />
-          <Route path="territories" element={<TerritoryManagement />} />
-          <Route path="commissions" element={<CommissionSettings />} />
-          <Route path="targets" element={<TargetSettings />} />
-          <Route path="approvals" element={<ApprovalWorkflows />} />
-          <Route path="audit" element={<AuditLogs />} />
+        {/* 1. Super Admin Section */}
+        <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']} />}>
+          <Route path="/super-admin" element={<SuperAdminLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<SuperAdminDashboard />} />
+            <Route path="roles" element={<RoleManagement />} />
+            <Route path="users" element={<UserManagement />} />
+            <Route path="businesses" element={<BusinessVerticals />} />
+            <Route path="territories" element={<TerritoryManagement />} />
+            <Route path="commissions" element={<CommissionSettings />} />
+            <Route path="targets" element={<TargetSettings />} />
+            <Route path="approvals" element={<ApprovalWorkflows />} />
+            <Route path="audit" element={<AuditLogs />} />
+          </Route>
         </Route>
 
-        {/* Admin Section */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="franchises" element={<FranchiseList />} />
-          <Route path="signup-new" element={<NewFranchiseSignup />} />
-          <Route path="leads" element={<FranchiseLeads />} />
-          <Route path="daily-entries" element={<DailyEntries />} />
-          <Route path="hierarchy" element={<HierarchyManagement />} />
-          <Route path="approvals" element={<OperationalApprovals />} />
-          <Route path="reports" element={<OperationalReports />} />
+        {/* 2. Operational Admin Section */}
+        <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']} />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="franchises" element={<FranchiseList />} />
+            <Route path="signup-new" element={<NewFranchiseSignup />} />
+            <Route path="leads" element={<FranchiseLeads />} />
+            <Route path="daily-entries" element={<DailyEntries />} />
+            <Route path="hierarchy" element={<HierarchyManagement />} />
+            <Route path="approvals" element={<OperationalApprovals />} />
+            <Route path="reports" element={<OperationalReports />} />
+          </Route>
         </Route>
 
-        {/* Director Section */}
-        <Route path="/director" element={<DirectorLayout />}>
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<DirectorDashboard />} />
-          <Route path="territories" element={<DirectorTerritories />} />
-          <Route path="franchises" element={<DirectorFranchises />} />
-          <Route path="managers" element={<DirectorManagers />} />
-          <Route path="rankings" element={<DirectorRankings />} />
+        {/* 3. Director Section */}
+        <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'DIRECTOR']} />}>
+          <Route path="/director" element={<DirectorLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<DirectorDashboard />} />
+            <Route path="territories" element={<DirectorTerritories />} />
+            <Route path="franchises" element={<DirectorFranchises />} />
+            <Route path="managers" element={<DirectorManagers />} />
+            <Route path="rankings" element={<DirectorRankings />} />
+          </Route>
         </Route>
 
-        {/* Head Coordinator Section */}
-        <Route path="/head-coordinator" element={<CoordinatorLayout />}>
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<CoordinatorDashboard />} />
-          <Route path="state-heads" element={<StateHeadOperations />} />
-          <Route path="comparison" element={<StateComparison />} />
-          <Route path="approvals" element={<CoordinatorApprovals />} />
+        {/* 4. Head Coordinator Section */}
+        <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'HEAD_COORDINATOR']} />}>
+          <Route path="/head-coordinator" element={<CoordinatorLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<CoordinatorDashboard />} />
+            <Route path="state-heads" element={<StateHeadOperations />} />
+            <Route path="comparison" element={<StateComparison />} />
+            <Route path="approvals" element={<CoordinatorApprovals />} />
+          </Route>
         </Route>
 
-        {/* State Head Section */}
-        <Route path="/state-head" element={<StateHeadLayout />}>
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<StateHeadDashboard />} />
-          <Route path="districts" element={<DistrictOperations />} />
-          <Route path="managers" element={<SalesManagers />} />
-          <Route path="franchises" element={<StateHeadDashboard />} />
-          <Route path="reports" element={<StateReports />} />
-          <Route path="approvals" element={<StateApprovals />} />
+        {/* 5. State Head Section */}
+        <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'STATE_HEAD']} />}>
+          <Route path="/state-head" element={<StateHeadLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<StateHeadDashboard />} />
+            <Route path="districts" element={<DistrictOperations />} />
+            <Route path="managers" element={<SalesManagers />} />
+            <Route path="reports" element={<StateReports />} />
+            <Route path="approvals" element={<StateApprovals />} />
+          </Route>
         </Route>
 
-        {/* State Sales Manager Section */}
-        <Route path="/sales-manager" element={<SalesManagerLayout />}>
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<StateSalesManagerDashboard />} />
-          <Route path="franchises" element={<AssignedFranchises />} />
-          <Route path="daily-verifications" element={<DailyEntryVerification />} />
-          <Route path="collections" element={<CollectionFollowup />} />
-          <Route path="visits" element={<FranchiseVisits />} />
+        {/* 6. State Sales Manager Section */}
+        <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'SALES_MANAGER']} />}>
+          <Route path="/sales-manager" element={<SalesManagerLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<StateSalesManagerDashboard />} />
+            <Route path="franchises" element={<AssignedFranchises />} />
+            <Route path="daily-verifications" element={<DailyEntryVerification />} />
+            <Route path="collections" element={<CollectionFollowup />} />
+            <Route path="visits" element={<FranchiseVisits />} />
+          </Route>
         </Route>
 
-        {/* Franchise Section */}
-        <Route path="/franchise" element={<FranchiseLayout />}>
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<FranchiseDashboard />} />
-          <Route path="entries" element={<DailyEntries />} />
-          <Route path="collections" element={<Collections />} />
-          <Route path="customers" element={<Customers />} />
-          <Route path="leads" element={<Leads />} />
-          <Route path="commissions" element={<CommissionEarnings />} />
-          <Route path="tasks" element={<PendingTasks />} />
+        {/* 7. Franchise Section */}
+        <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'FRANCHISE']} />}>
+          <Route path="/franchise" element={<FranchiseLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<FranchiseDashboard />} />
+            <Route path="entries" element={<DailyEntries />} />
+            <Route path="collections" element={<Collections />} />
+            <Route path="customers" element={<Customers />} />
+            <Route path="leads" element={<Leads />} />
+            <Route path="commissions" element={<CommissionEarnings />} />
+            <Route path="tasks" element={<PendingTasks />} />
+          </Route>
         </Route>
 
         <Route path="*" element={<Navigate to="/login" replace />} />

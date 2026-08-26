@@ -11,7 +11,7 @@ const User = sequelize.define('User', {
   userCode: {
     type: DataTypes.STRING,
     unique: true,
-    allowNull: true, // e.g., AVG-TN-CHN-00125
+    allowNull: true,
   },
   name: {
     type: DataTypes.STRING,
@@ -19,7 +19,7 @@ const User = sequelize.define('User', {
   },
   email: {
     type: DataTypes.STRING,
-    allowNull: true,
+    allowNull: false,
     unique: true,
     validate: {
       isEmail: true,
@@ -47,7 +47,10 @@ const User = sequelize.define('User', {
     allowNull: false,
     defaultValue: 'FRANCHISE',
   },
-  // Franchise specific onboarding fields
+  isPasswordResetRequired: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
   businessType: {
     type: DataTypes.STRING,
     allowNull: true,

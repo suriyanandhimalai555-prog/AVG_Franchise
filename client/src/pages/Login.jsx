@@ -1,23 +1,36 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Lock, ArrowRight, ShieldCheck, Eye, EyeOff } from 'lucide-react';
+import { User, Lock, ArrowRight, ShieldCheck, Eye, EyeOff, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import Logo from '../assets/logo.png';
+
+// Fallback dashboard routes based on user role
+const ROLE_DASHBOARDS = {
+  SUPER_ADMIN: '/super-admin/dashboard',
+  ADMIN: '/admin/dashboard',
+  DIRECTOR: '/director/dashboard',
+  HEAD_COORDINATOR: '/head-coordinator/dashboard',
+  STATE_HEAD: '/state-head/dashboard',
+  SALES_MANAGER: '/sales-manager/dashboard',
+  FRANCHISE: '/franchise/dashboard',
+};
 
 const Login = () => {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+
+    const baseUrl = import.meta.env.VITE_APP_BASE_URL || 'http://localhost:5000';
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch(`${baseUrl}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifier, password }),
@@ -26,14 +39,34 @@ const Login = () => {
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data));
-        navigate(data.redirectTo);
+        // Handle varying API structure (whether user is inside data.user or at root of data)
+        const userObj = data.user || {
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          role: data.role,
+          userCode: data.userCode,
+          redirectTo: data.redirectTo,
+        };
+
+        const token = data.token;
+        const role = userObj.role;
+
+        // Save session details
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(userObj));
+
+        toast.success(`Welcome back, ${userObj.name || 'User'}!`);
+
+        // Navigate based on assigned role or backend redirect payload
+        const targetPath = ROLE_DASHBOARDS[role] || data.redirectTo || '/login';
+        navigate(targetPath, { replace: true });
       } else {
-        setError(data.message || 'Invalid credentials');
+        toast.error(data.message || 'Invalid credentials. Please try again.');
       }
     } catch (err) {
-      setError('Server connection failed. Make sure backend is running.');
+      console.error('Login Error:', err);
+      toast.error('Server connection failed. Make sure backend is running.');
     } finally {
       setLoading(false);
     }
@@ -43,6 +76,7 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-slate-50/80 p-4">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-xl shadow-slate-200/60 border border-slate-100 p-8 sm:p-10">
         
+        {/* Header Section */}
         <div className="flex flex-col items-center mb-8">
           <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 mb-3 shadow-inner">
             <img src={Logo} alt="AVG Franchise Logo" className="w-12 h-12 object-contain" />
@@ -57,12 +91,7 @@ const Login = () => {
           <p className="text-xs text-slate-400 mt-1 font-medium">Enter your credentials to access the portal</p>
         </div>
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 font-semibold text-center">
-            {error}
-          </div>
-        )}
-
+        {/* Form Section */}
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
@@ -119,11 +148,21 @@ const Login = () => {
             disabled={loading}
             className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-600/25 active:scale-[0.99] flex items-center justify-center gap-2 text-sm transition-all duration-150 disabled:opacity-50"
           >
-            <span>{loading ? 'Authenticating...' : 'Sign In'}</span>
-            {!loading && <ArrowRight className="w-4 h-4" />}
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Authenticating...</span>
+              </>
+            ) : (
+              <>
+                <span>Sign In</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </button>
         </form>
 
+        {/* Footer Section */}
         <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col items-center gap-4">
           <p className="text-center text-xs text-slate-500 font-medium">
             New Franchise Applicant?{' '}
