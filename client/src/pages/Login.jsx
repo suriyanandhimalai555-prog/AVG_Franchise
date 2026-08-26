@@ -7,19 +7,42 @@ const Login = () => {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    // Unified login submission point — route mapping handles role redirect after backend authentication
-    navigate('/user'); 
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data));
+        navigate(data.redirectTo);
+      } else {
+        setError(data.message || 'Invalid credentials');
+      }
+    } catch (err) {
+      setError('Server connection failed. Make sure backend is running.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50/80 p-4">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-xl shadow-slate-200/60 border border-slate-100 p-8 sm:p-10">
         
-        {/* Logo & Header */}
         <div className="flex flex-col items-center mb-8">
           <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 mb-3 shadow-inner">
             <img src={Logo} alt="AVG Franchise Logo" className="w-12 h-12 object-contain" />
@@ -34,7 +57,12 @@ const Login = () => {
           <p className="text-xs text-slate-400 mt-1 font-medium">Enter your credentials to access the portal</p>
         </div>
 
-        {/* Login Form */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 font-semibold text-center">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
@@ -88,14 +116,14 @@ const Login = () => {
 
           <button
             type="submit"
-            className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-600/25 active:scale-[0.99] flex items-center justify-center gap-2 text-sm transition-all duration-150"
+            disabled={loading}
+            className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-600/25 active:scale-[0.99] flex items-center justify-center gap-2 text-sm transition-all duration-150 disabled:opacity-50"
           >
-            <span>Sign In</span>
-            <ArrowRight className="w-4 h-4" />
+            <span>{loading ? 'Authenticating...' : 'Sign In'}</span>
+            {!loading && <ArrowRight className="w-4 h-4" />}
           </button>
         </form>
 
-        {/* Security badge & Onboarding link */}
         <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col items-center gap-4">
           <p className="text-center text-xs text-slate-500 font-medium">
             New Franchise Applicant?{' '}
