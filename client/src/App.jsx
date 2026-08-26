@@ -40,6 +40,14 @@ import StateHeadOperations from './pages/HeadCoordinator/StateHeadOperations';
 import StateComparison from './pages/HeadCoordinator/StateComparison';
 import CoordinatorApprovals from './pages/HeadCoordinator/CoordinatorApprovals';
 
+// State Head Layout & Pages
+import StateHeadLayout from './layouts/StateHeadLayout';
+import StateHeadDashboard from './pages/StateHead/StateHeadDashboard';
+import DistrictOperations from './pages/StateHead/DistrictOperations';
+import SalesManagers from './pages/StateHead/SalesManagers';
+import StateReports from './pages/StateHead/StateReports';
+import StateApprovals from './pages/StateHead/StateApprovals';
+
 import UserLayout from './layouts/UserLayout';
 import UserDashboard from './pages/UserDashboard';
 
@@ -98,6 +106,17 @@ const App = () => {
           <Route path="state-heads" element={<StateHeadOperations />} />
           <Route path="comparison" element={<StateComparison />} />
           <Route path="approvals" element={<CoordinatorApprovals />} />
+        </Route>
+
+        {/* State Head Section */}
+        <Route path="/state-head" element={<StateHeadLayout />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<StateHeadDashboard />} />
+          <Route path="districts" element={<DistrictOperations />} />
+          <Route path="managers" element={<SalesManagers />} />
+          <Route path="franchises" element={<StateHeadDashboard />} />
+          <Route path="reports" element={<StateReports />} />
+          <Route path="approvals" element={<StateApprovals />} />
         </Route>
 
         {/* User Section with Persistent Layout */}
