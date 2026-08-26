@@ -48,6 +48,14 @@ import SalesManagers from './pages/StateHead/SalesManagers';
 import StateReports from './pages/StateHead/StateReports';
 import StateApprovals from './pages/StateHead/StateApprovals';
 
+// Sales Manager Layout & Pages
+import SalesManagerLayout from './layouts/SalesManagerLayout';
+import StateSalesManagerDashboard from './pages/SalesManager/StateSalesManagerDashboard';
+import AssignedFranchises from './pages/SalesManager/AssignedFranchises';
+import DailyEntryVerification from './pages/SalesManager/DailyEntryVerification';
+import CollectionFollowup from './pages/SalesManager/CollectionFollowup';
+import FranchiseVisits from './pages/SalesManager/FranchiseVisits';
+
 import UserLayout from './layouts/UserLayout';
 import UserDashboard from './pages/UserDashboard';
 
@@ -117,6 +125,16 @@ const App = () => {
           <Route path="franchises" element={<StateHeadDashboard />} />
           <Route path="reports" element={<StateReports />} />
           <Route path="approvals" element={<StateApprovals />} />
+        </Route>
+
+        {/* State Sales Manager Section */}
+        <Route path="/sales-manager" element={<SalesManagerLayout />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<StateSalesManagerDashboard />} />
+          <Route path="franchises" element={<AssignedFranchises />} />
+          <Route path="daily-verifications" element={<DailyEntryVerification />} />
+          <Route path="collections" element={<CollectionFollowup />} />
+          <Route path="visits" element={<FranchiseVisits />} />
         </Route>
 
         {/* User Section with Persistent Layout */}
