@@ -56,8 +56,15 @@ import DailyEntryVerification from './pages/SalesManager/DailyEntryVerification'
 import CollectionFollowup from './pages/SalesManager/CollectionFollowup';
 import FranchiseVisits from './pages/SalesManager/FranchiseVisits';
 
-import UserLayout from './layouts/UserLayout';
-import UserDashboard from './pages/UserDashboard';
+// Franchise Layout & Pages
+import FranchiseLayout from './layouts/FranchiseLayout';
+import FranchiseDashboard from './pages/Franchise/FranchiseDashboard';
+import FranchiseDailyEntries from './pages/Franchise/FranchiseDailyEntries';
+import Collections from './pages/Franchise/Collections';
+import Customers from './pages/Franchise/Customers';
+import Leads from './pages/Franchise/Leads';
+import CommissionEarnings from './pages/Franchise/CommissionEarnings';
+import PendingTasks from './pages/Franchise/PendingTasks';
 
 const AdminRoles = () => <div className="text-xl font-bold text-slate-800">Admin Roles Page</div>;
 const UserRoles = () => <div className="text-xl font-bold text-slate-800">User Roles Page</div>;
@@ -137,11 +144,16 @@ const App = () => {
           <Route path="visits" element={<FranchiseVisits />} />
         </Route>
 
-        {/* User Section with Persistent Layout */}
-        <Route path="/user" element={<UserLayout />}>
+        {/* Franchise Section */}
+        <Route path="/franchise" element={<FranchiseLayout />}>
           <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<UserDashboard />} />
-          <Route path="roles" element={<UserRoles />} />
+          <Route path="dashboard" element={<FranchiseDashboard />} />
+          <Route path="entries" element={<DailyEntries />} />
+          <Route path="collections" element={<Collections />} />
+          <Route path="customers" element={<Customers />} />
+          <Route path="leads" element={<Leads />} />
+          <Route path="commissions" element={<CommissionEarnings />} />
+          <Route path="tasks" element={<PendingTasks />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/login" replace />} />
