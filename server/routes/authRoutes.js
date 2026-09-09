@@ -6,7 +6,8 @@ import {
   createUserByAdmin,
   changePassword,
   getRoleCounts,
-  getUsersByRole
+  getUsersByRole,
+  getAllUsers
 } from '../controllers/authController.js';
 import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
 
@@ -35,5 +36,7 @@ router.post(
 router.get('/role-counts', protect, getRoleCounts);
 
 router.get('/users-by-role/:role', protect, getUsersByRole);
+
+router.get('/all-users', protect, getAllUsers);
 
 export default router;

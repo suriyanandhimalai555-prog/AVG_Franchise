@@ -21,8 +21,6 @@ const generateTempPassword = () => {
   return 'AVG@' + Math.floor(100000 + Math.random() * 900000);
 };
 
-// @desc Setup initial Super Admin via Postman (Allowed ONLY ONCE)
-// @route POST /api/auth/setup-super-admin
 export const createSuperAdmin = async (req, res) => {
   const { name, email, mobile, password } = req.body;
 
@@ -64,8 +62,6 @@ export const createSuperAdmin = async (req, res) => {
   }
 };
 
-// @desc Internal Account Creation (All roles EXCEPT SUPER_ADMIN)
-// @route POST /api/auth/create-user
 export const createUserByAdmin = async (req, res) => {
   const { name, email, mobile, role } = req.body;
 
@@ -279,5 +275,32 @@ export const getUsersByRole = async (req, res) => {
   } catch (error) {
     console.error('Error fetching users by role:', error);
     return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// @desc Get All Users Across All Roles
+// @route GET /api/auth/all-users
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.findAll({
+      attributes: [
+        'id', 
+        'userCode', 
+        'name', 
+        'email', 
+        'mobile', 
+        'role', 
+        'state', 
+        'district', 
+        'isActive', 
+        'createdAt'
+      ],
+      order: [['createdAt', 'DESC']],
+    });
+
+    return res.status(200).json(users);
+  } catch (error) {
+    console.error('Error fetching all users:', error);
+    return res.status(500).json({ message: 'Failed to retrieve users' });
   }
 };
