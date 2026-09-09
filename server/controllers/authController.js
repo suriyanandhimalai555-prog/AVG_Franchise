@@ -187,13 +187,24 @@ export const changePassword = async (req, res) => {
 
 // @desc Public Franchise Application
 // @route POST /api/auth/register-franchise
+// @desc Public Franchise Application
+// @route POST /api/auth/register-franchise
 export const registerFranchise = async (req, res) => {
-  const { name, mobile, businessType, street, area, state, district, pincode, password } = req.body;
+  const { name, email, mobile, businessType, street, area, state, district, pincode, password } = req.body;
+
+  if (!name || !email || !mobile) {
+    return res.status(400).json({ message: 'Name, Email, and Mobile are required fields.' });
+  }
 
   try {
-    const existingUser = await User.findOne({ where: { mobile } });
+    const existingUser = await User.findOne({
+      where: {
+        [Op.or]: [{ email }, { mobile }]
+      }
+    });
+
     if (existingUser) {
-      return res.status(400).json({ message: 'Mobile number already registered' });
+      return res.status(400).json({ message: 'User with this email or mobile number already exists' });
     }
 
     const userPassword = password || `AVG@${mobile.slice(-4)}`;
@@ -204,6 +215,7 @@ export const registerFranchise = async (req, res) => {
 
     const newFranchise = await User.create({
       name,
+      email,
       mobile,
       businessType,
       street,
@@ -224,6 +236,7 @@ export const registerFranchise = async (req, res) => {
       token: generateToken(newFranchise.id, newFranchise.role),
     });
   } catch (error) {
+    console.error('Error in registerFranchise:', error);
     return res.status(500).json({ message: error.message });
   }
 };

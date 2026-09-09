@@ -22,7 +22,7 @@ router.post('/login', loginUser);
 // Password update after first login
 router.post('/change-password', protect, changePassword);
 
-// Public Franchise Onboarding
+// Public Franchise Onboarding / Signup
 router.post('/register-franchise', registerFranchise);
 
 // Protected account creation (SUPER_ADMIN & ADMIN only)
@@ -33,10 +33,9 @@ router.post(
   createUserByAdmin
 );
 
+// Get role metrics and user listings
 router.get('/role-counts', protect, getRoleCounts);
-
 router.get('/users-by-role/:role', protect, getUsersByRole);
-
 router.get('/all-users', protect, getAllUsers);
 
 export default router;
