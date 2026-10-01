@@ -3,6 +3,7 @@ import sequelize from '../config/db.js';
 import User from './User.js';
 import { Stock } from './stockModel.js';
 import { StockRequest } from './stockRequestModel.js';
+import Attendance from './attendanceModel.js';
 
 const initDB = async () => {
   try {
@@ -14,4 +15,4 @@ const initDB = async () => {
   }
 };
 
-export { sequelize, User, Stock, StockRequest, initDB };
+export { sequelize, User, Stock, StockRequest, Attendance, initDB };
