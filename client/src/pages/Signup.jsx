@@ -4,7 +4,7 @@ import { User, Phone, Mail, Lock, Briefcase, MapPin, Building, Home, Hash, Arrow
 import Logo from '../assets/logo.png';
 import { INDIA_LOCATIONS } from '../data/indiaLocations';
 
-// Fallback handles Vite dev server proxy or standalone backend port
+// Base URL handling with fallback
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 const Register = () => {
@@ -42,10 +42,9 @@ const Register = () => {
     setLoading(true);
 
     try {
-      // Safe dynamic target URL
-      const targetUrl = API_BASE_URL.endsWith('/')
-        ? `${import.meta.env.VITE_API_BASE_URL}api/auth/register-franchise`
-        : `${import.meta.env.VITE_API_BASE_URL}/api/auth/register-franchise`;
+      // Safely construct target URL without throwing error or hitting frontend HTML route
+      const cleanBase = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+      const targetUrl = `${cleanBase}/api/auth/register-franchise`;
 
       const response = await fetch(targetUrl, {
         method: 'POST',
@@ -55,13 +54,13 @@ const Register = () => {
         body: JSON.stringify(formData)
       });
 
-      // Safely parse JSON response to prevent crashing on non-JSON HTML error responses
       const contentType = response.headers.get('content-type');
       let data = {};
+      
       if (contentType && contentType.includes('application/json')) {
         data = await response.json();
       } else {
-        throw new Error(`Server returned status ${response.status} (${response.statusText})`);
+        throw new Error('API server returned HTML instead of JSON. Check your backend deployment/API URL.');
       }
 
       if (!response.ok) {
