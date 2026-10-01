@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Package, Scale, Hash, X, Loader2, RefreshCw } from 'lucide-react';
+import { Plus, Package, Scale, Hash, X, Loader2, RefreshCw, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const StockUpdate = () => {
@@ -132,30 +132,56 @@ const StockUpdate = () => {
                   <th className="py-3.5 px-6">Single Unit Weight (kg)</th>
                   <th className="py-3.5 px-6">Quantity Count</th>
                   <th className="py-3.5 px-6">Total Calculated Weight</th>
+                  <th className="py-3.5 px-6">Status</th>
                   <th className="py-3.5 px-6">Last Updated</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs font-medium text-slate-700">
-                {stocks.map((stock) => (
-                  <tr key={stock.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="py-4 px-6 font-bold text-slate-800 flex items-center gap-2">
-                      <Package className="w-4 h-4 text-amber-500 shrink-0" />
-                      {stock.stock_name}
-                    </td>
-                    <td className="py-4 px-6">{Number(stock.single_stock_weight).toFixed(2)} kg</td>
-                    <td className="py-4 px-6">
-                      <span className="bg-amber-50 text-amber-700 border border-amber-200/60 px-2.5 py-1 rounded-lg font-bold">
-                        {stock.count} units
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 font-semibold text-slate-900">
-                      {(Number(stock.single_stock_weight) * Number(stock.count)).toFixed(2)} kg
-                    </td>
-                    <td className="py-4 px-6 text-slate-400 text-[11px]">
-                      {new Date(stock.created_at).toLocaleString()}
-                    </td>
-                  </tr>
-                ))}
+                {stocks.map((stock) => {
+                  const totalWeight = (Number(stock.single_stock_weight) * Number(stock.count)).toFixed(2);
+                  const isOutOfStock = stock.count <= 0;
+                  const isLowStock = stock.count > 0 && stock.count <= 10;
+
+                  return (
+                    <tr key={stock.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="py-4 px-6 font-bold text-slate-800 flex items-center gap-2">
+                        <Package className="w-4 h-4 text-amber-500 shrink-0" />
+                        {stock.stock_name}
+                      </td>
+                      <td className="py-4 px-6">{Number(stock.single_stock_weight).toFixed(2)} kg</td>
+                      <td className="py-4 px-6">
+                        <span className={`px-2.5 py-1 rounded-lg font-bold border ${
+                          isOutOfStock 
+                            ? 'bg-rose-50 text-rose-700 border-rose-200' 
+                            : 'bg-amber-50 text-amber-700 border-amber-200/60'
+                        }`}>
+                          {stock.count} units
+                        </span>
+                      </td>
+                      <td className="py-4 px-6 font-semibold text-slate-900">
+                        {totalWeight} kg
+                      </td>
+                      <td className="py-4 px-6">
+                        {isOutOfStock ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700">
+                            <X className="w-3 h-3" /> Out of Stock
+                          </span>
+                        ) : isLowStock ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700">
+                            <AlertTriangle className="w-3 h-3" /> Low Stock
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">
+                            Available
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-4 px-6 text-slate-400 text-[11px]">
+                        {new Date(stock.updatedAt || stock.created_at).toLocaleString()}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

@@ -60,6 +60,7 @@ import FranchiseVisits from './pages/SalesManager/FranchiseVisits';
 // Franchise Layout & Pages
 import FranchiseLayout from './layouts/FranchiseLayout';
 import FranchiseDashboard from './pages/Franchise/FranchiseDashboard';
+import StockRequestFranchise from './pages/Franchise/StockRequestFranchise';
 import Collections from './pages/Franchise/Collections';
 import Customers from './pages/Franchise/Customers';
 import Leads from './pages/Franchise/Leads';
@@ -163,6 +164,7 @@ const App = () => {
           <Route path="/franchise" element={<FranchiseLayout />}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<FranchiseDashboard />} />
+            <Route path="stock-requests" element={<StockRequestFranchise />} />
             <Route path="entries" element={<DailyEntries />} />
             <Route path="collections" element={<Collections />} />
             <Route path="customers" element={<Customers />} />

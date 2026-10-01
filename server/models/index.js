@@ -1,14 +1,12 @@
+// models/index.js
 import sequelize from '../config/db.js';
 import User from './User.js';
 import { Stock } from './stockModel.js';
+import { StockRequest } from './stockRequestModel.js';
 
 const initDB = async () => {
   try {
-    // Authenticate database connection
     await sequelize.authenticate();
-    console.log('PostgreSQL Database Connected Successfully.');
-
-    // Sync all models (User, Stock, etc.) with PostgreSQL schema
     await sequelize.sync({ alter: true });
     console.log('PostgreSQL Database & Models Synced.');
   } catch (error) {
@@ -16,4 +14,4 @@ const initDB = async () => {
   }
 };
 
-export { sequelize, User, Stock, initDB };
+export { sequelize, User, Stock, StockRequest, initDB };

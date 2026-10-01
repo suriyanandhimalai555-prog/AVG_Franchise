@@ -1,15 +1,98 @@
-// src/pages/Stockholder/StockholderDashboard.jsx
-import React from 'react';
-import { TrendingUp, PieChart, DollarSign, Award, ArrowUpRight, FileText, Download, Shield } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { 
+  TrendingUp, 
+  PieChart, 
+  Package, 
+  Scale, 
+  ArrowUpRight, 
+  FileText, 
+  Download, 
+  Shield, 
+  Loader2, 
+  RefreshCw, 
+  Clock, 
+  CheckCircle2, 
+  XCircle 
+} from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const StockholderDashboard = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const baseUrl = import.meta.env.VITE_APP_BASE_URL || 'http://localhost:5000';
+
+  const [loading, setLoading] = useState(true);
+  const [stocks, setStocks] = useState([]);
+  const [requests, setRequests] = useState([]);
+
+  // Fetch Live Stock and Stock Request Data
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      const [stocksRes, requestsRes] = await Promise.all([
+        fetch(`${baseUrl}/api/stocks`),
+        fetch(`${baseUrl}/api/stock-requests`),
+      ]);
+
+      const stocksResult = await stocksRes.json();
+      const requestsResult = await requestsRes.json();
+
+      if (stocksRes.ok && stocksResult.success) {
+        setStocks(stocksResult.data || []);
+      }
+      if (requestsRes.ok && requestsResult.success) {
+        setRequests(requestsResult.data || []);
+      }
+    } catch (error) {
+      console.error('Failed to load dashboard telemetry:', error);
+      toast.error('Failed to sync live dashboard data.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [baseUrl]);
+
+  // Dynamic Telemetry Computations
+  const totalStockItems = stocks.length;
+  const totalUnitCount = stocks.reduce((acc, item) => acc + (parseInt(item.count, 10) || 0), 0);
+  const totalInventoryWeight = stocks.reduce((acc, item) => {
+    const weight = parseFloat(item.single_stock_weight) || 0;
+    const count = parseInt(item.count, 10) || 0;
+    return acc + weight * count;
+  }, 0);
+  const pendingRequestsCount = requests.filter((r) => r.status === 'PENDING').length;
 
   const financialMetrics = [
-    { label: 'Total Portfolio Value', value: '₹48,50,000', change: '+14.2%', isPos: true, icon: DollarSign },
-    { label: 'Total Equity Share', value: '2.50%', change: 'Fixed Pool', isPos: true, icon: PieChart },
-    { label: 'YTD Dividend Payout', value: '₹3,20,000', change: '+8.5%', isPos: true, icon: TrendingUp },
-    { label: 'Quarterly ROI', value: '18.4%', change: '+2.1%', isPos: true, icon: Award },
+    {
+      label: 'Total Stock Products',
+      value: `${totalStockItems} Items`,
+      change: '+ Live Sync',
+      isPos: true,
+      icon: Package,
+    },
+    {
+      label: 'Total Available Units',
+      value: `${totalUnitCount.toLocaleString()} Units`,
+      change: 'In Warehouse',
+      isPos: true,
+      icon: PieChart,
+    },
+    {
+      label: 'Total Portfolio Weight',
+      value: `${totalInventoryWeight.toFixed(2)} kg`,
+      change: 'Live Mass',
+      isPos: true,
+      icon: Scale,
+    },
+    {
+      label: 'Pending Franchise Demands',
+      value: `${pendingRequestsCount} Requests`,
+      change: pendingRequestsCount > 0 ? 'Requires Action' : 'All Clear',
+      isPos: pendingRequestsCount === 0,
+      icon: TrendingUp,
+    },
   ];
 
   const quarterlyReports = [
@@ -23,14 +106,24 @@ const StockholderDashboard = () => {
       {/* Header Banner */}
       <div className="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-xl shadow-slate-900/10">
         <div className="relative z-10 max-w-2xl">
-          <span className="text-xs font-bold uppercase tracking-widest bg-amber-400/20 text-amber-300 border border-amber-400/30 px-3 py-1 rounded-full">
-            Shareholder Account
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-bold uppercase tracking-widest bg-amber-400/20 text-amber-300 border border-amber-400/30 px-3 py-1 rounded-full">
+              Shareholder Account
+            </span>
+            <button
+              onClick={fetchDashboardData}
+              className="p-1.5 text-slate-400 hover:text-white rounded-lg transition"
+              title="Refresh Telemetry"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+
           <h1 className="text-2xl sm:text-3xl font-extrabold mt-3 tracking-tight">
             Welcome, {user.name || 'Valued Investor'}
           </h1>
           <p className="text-slate-300 text-xs sm:text-sm mt-2 leading-relaxed">
-            Real-time equity breakdown, financial performance telemetry, dividend logs, and official corporate reports.
+            Real-time equity breakdown, stock inventory telemetry, franchise demand logs, and official corporate reports.
           </p>
         </div>
         <PieChart className="absolute -right-8 -bottom-8 w-64 h-64 text-slate-800/60 pointer-events-none" />
@@ -49,7 +142,9 @@ const StockholderDashboard = () => {
                 </div>
               </div>
               <div className="mt-4">
-                <div className="text-2xl font-extrabold text-slate-900 tracking-tight">{m.value}</div>
+                <div className="text-2xl font-extrabold text-slate-900 tracking-tight">
+                  {loading ? <Loader2 className="w-5 h-5 animate-spin text-amber-500" /> : m.value}
+                </div>
                 <div className="flex items-center gap-1 text-xs font-bold text-emerald-600 mt-1">
                   <ArrowUpRight className="w-3.5 h-3.5" />
                   <span>{m.change}</span>
@@ -60,60 +155,74 @@ const StockholderDashboard = () => {
         })}
       </div>
 
+      {/* Main Content Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Dividend Distribution History */}
+        
+        {/* Recent Live Stock Requests */}
         <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-base font-bold text-slate-900">Recent Dividend Distributions</h2>
-              <p className="text-xs text-slate-500">History of profit payouts credited to your registered account</p>
+              <h2 className="text-base font-bold text-slate-900">Recent Franchise Requests</h2>
+              <p className="text-xs text-slate-500">Live demand tracking from registered franchise centers</p>
             </div>
+            <span className="text-xs font-semibold text-slate-400">Total: {requests.length}</span>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/50">
-                  <th className="py-3 px-4">Payout Period</th>
-                  <th className="py-3 px-4">Yield Per Share</th>
-                  <th className="py-3 px-4">Total Amount</th>
-                  <th className="py-3 px-4">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-xs font-medium text-slate-700">
-                <tr className="hover:bg-slate-50/60">
-                  <td className="py-3.5 px-4 font-bold text-slate-800">Q2 2026 Dividend</td>
-                  <td className="py-3.5 px-4 text-slate-600">₹45.00</td>
-                  <td className="py-3.5 px-4 font-mono font-bold text-slate-900">₹1,12,500</td>
-                  <td className="py-3.5 px-4">
-                    <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">
-                      Settled
-                    </span>
-                  </td>
-                </tr>
-                <tr className="hover:bg-slate-50/60">
-                  <td className="py-3.5 px-4 font-bold text-slate-800">Q1 2026 Dividend</td>
-                  <td className="py-3.5 px-4 text-slate-600">₹42.50</td>
-                  <td className="py-3.5 px-4 font-mono font-bold text-slate-900">₹1,06,250</td>
-                  <td className="py-3.5 px-4">
-                    <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">
-                      Settled
-                    </span>
-                  </td>
-                </tr>
-                <tr className="hover:bg-slate-50/60">
-                  <td className="py-3.5 px-4 font-bold text-slate-800">Q4 2025 Dividend</td>
-                  <td className="py-3.5 px-4 text-slate-600">₹40.00</td>
-                  <td className="py-3.5 px-4 font-mono font-bold text-slate-900">₹1,00,000</td>
-                  <td className="py-3.5 px-4">
-                    <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">
-                      Settled
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          {loading ? (
+            <div className="py-12 flex items-center justify-center gap-2 text-xs text-slate-500 font-medium">
+              <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
+              <span>Fetching live requests...</span>
+            </div>
+          ) : requests.length === 0 ? (
+            <div className="py-12 text-center text-xs font-medium text-slate-400">
+              No franchise requests found in database.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/50">
+                    <th className="py-3 px-4">Franchise</th>
+                    <th className="py-3 px-4">Product Item</th>
+                    <th className="py-3 px-4">Quantity</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4">Requested Date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+                  {requests.slice(0, 5).map((req) => (
+                    <tr key={req.id} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="py-3.5 px-4 font-bold text-slate-800">{req.franchise_name}</td>
+                      <td className="py-3.5 px-4 text-slate-600">{req.stock?.stock_name || 'N/A'}</td>
+                      <td className="py-3.5 px-4 font-mono font-bold text-slate-900">
+                        {req.requested_count} units
+                      </td>
+                      <td className="py-3.5 px-4">
+                        {req.status === 'PENDING' && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-200">
+                            <Clock className="w-3 h-3 animate-pulse" /> Pending
+                          </span>
+                        )}
+                        {req.status === 'APPROVED' && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">
+                            <CheckCircle2 className="w-3 h-3" /> Approved
+                          </span>
+                        )}
+                        {req.status === 'REJECTED' && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-200">
+                            <XCircle className="w-3 h-3" /> Rejected
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-4 text-slate-400 text-[11px]">
+                        {new Date(req.created_at).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {/* Corporate Financial Reports */}
@@ -147,6 +256,7 @@ const StockholderDashboard = () => {
             <span>Audited by AVG Board of Directors</span>
           </div>
         </div>
+
       </div>
     </div>
   );
