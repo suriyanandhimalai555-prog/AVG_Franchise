@@ -15,6 +15,7 @@ const ROLE_REDIRECT_MAP = {
   STATE_HEAD: '/state-head',
   SALES_MANAGER: '/sales-manager',
   FRANCHISE: '/franchise',
+  STOCKHOLDER: '/stockholder',
 };
 
 const generateTempPassword = () => {
@@ -69,7 +70,7 @@ export const createUserByAdmin = async (req, res) => {
     return res.status(403).json({ message: 'Cannot create another Super Admin account.' });
   }
 
-  const allowedRoles = ['ADMIN', 'DIRECTOR', 'HEAD_COORDINATOR', 'STATE_HEAD', 'SALES_MANAGER', 'FRANCHISE'];
+  const allowedRoles = ['ADMIN', 'DIRECTOR', 'HEAD_COORDINATOR', 'STATE_HEAD', 'SALES_MANAGER', 'FRANCHISE', 'STOCKHOLDER'];
   if (!allowedRoles.includes(role)) {
     return res.status(400).json({ message: 'Invalid role specified.' });
   }
@@ -243,12 +244,8 @@ export const registerFranchise = async (req, res) => {
 
 export const getRoleCounts = async (req, res) => {
   try {
-    const users = await User.findAll({
-      attributes: ['role'],
-      raw: true,
-    });
+    const users = await User.findAll({ attributes: ['role'], raw: true });
 
-    // Default template matching your frontend keys
     const counts = {
       SUPER_ADMIN: 0,
       ADMIN: 0,
@@ -257,6 +254,7 @@ export const getRoleCounts = async (req, res) => {
       STATE_HEAD: 0,
       SALES_MANAGER: 0,
       FRANCHISE: 0,
+      STOCKHOLDER: 0,
     };
 
     users.forEach((user) => {

@@ -66,6 +66,10 @@ import Leads from './pages/Franchise/Leads';
 import CommissionEarnings from './pages/Franchise/CommissionEarnings';
 import PendingTasks from './pages/Franchise/PendingTasks';
 
+// Stockholder Layout & Pages
+import StockholderLayout from './layouts/StockholderLayout';
+import StockholderDashboard from './pages/Stockholder/StockholderDashboard';
+
 const App = () => {
   return (
     <Router>
@@ -163,6 +167,14 @@ const App = () => {
             <Route path="leads" element={<Leads />} />
             <Route path="commissions" element={<CommissionEarnings />} />
             <Route path="tasks" element={<PendingTasks />} />
+          </Route>
+        </Route>
+
+        {/* 8. Stockholder Section */}
+        <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN', 'STOCKHOLDER']} />}>
+          <Route path="/stockholder" element={<StockholderLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<StockholderDashboard />} />
           </Route>
         </Route>
 

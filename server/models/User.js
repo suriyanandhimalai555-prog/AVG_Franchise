@@ -1,3 +1,4 @@
+// models/User.js
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/db.js';
 import bcrypt from 'bcryptjs';
@@ -21,9 +22,7 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
-    validate: {
-      isEmail: true,
-    },
+    validate: { isEmail: true },
   },
   mobile: {
     type: DataTypes.STRING,
@@ -42,7 +41,8 @@ const User = sequelize.define('User', {
       'HEAD_COORDINATOR',
       'STATE_HEAD',
       'SALES_MANAGER',
-      'FRANCHISE'
+      'FRANCHISE',
+      'STOCKHOLDER' // Added STOCKHOLDER
     ),
     allowNull: false,
     defaultValue: 'FRANCHISE',
@@ -51,30 +51,12 @@ const User = sequelize.define('User', {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
-  businessType: {
-    type: DataTypes.STRING,
-    allowNull: true,
-  },
-  street: {
-    type: DataTypes.STRING,
-    allowNull: true,
-  },
-  area: {
-    type: DataTypes.STRING,
-    allowNull: true,
-  },
-  state: {
-    type: DataTypes.STRING,
-    allowNull: true,
-  },
-  district: {
-    type: DataTypes.STRING,
-    allowNull: true,
-  },
-  pincode: {
-    type: DataTypes.STRING,
-    allowNull: true,
-  },
+  businessType: { type: DataTypes.STRING, allowNull: true },
+  street: { type: DataTypes.STRING, allowNull: true },
+  area: { type: DataTypes.STRING, allowNull: true },
+  state: { type: DataTypes.STRING, allowNull: true },
+  district: { type: DataTypes.STRING, allowNull: true },
+  pincode: { type: DataTypes.STRING, allowNull: true },
   isActive: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,

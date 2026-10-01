@@ -41,6 +41,7 @@ const RoleManagement = () => {
     { id: 'R-05', title: 'State Head', enumKey: 'STATE_HEAD', level: 'Level 4', desc: 'State Franchise Signups & Commissions' },
     { id: 'R-06', title: 'Sales Manager', enumKey: 'SALES_MANAGER', level: 'Level 5', desc: 'Field Audits & Store Verifications' },
     { id: 'R-07', title: 'Franchise Partner', enumKey: 'FRANCHISE', level: 'Level 6', desc: 'Store Terminal Entry & Sales' },
+    { id: 'R-08', title: 'Stockholder / Investor', enumKey: 'STOCKHOLDER', level: 'Level 7', desc: 'Corporate Investor Portfolio & Financial Metrics' },
   ];
 
   // Close dropdown menu when clicking outside
@@ -442,6 +443,7 @@ const RoleManagement = () => {
                   <option value="STATE_HEAD">State Head</option>
                   <option value="SALES_MANAGER">Sales Manager</option>
                   <option value="FRANCHISE">Franchise Partner</option>
+                  <option value="STOCKHOLDER">Stockholder</option>
                 </select>
               </div>
 

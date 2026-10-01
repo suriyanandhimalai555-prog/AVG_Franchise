@@ -13,6 +13,7 @@ const ROLE_DASHBOARDS = {
   STATE_HEAD: '/state-head/dashboard',
   SALES_MANAGER: '/sales-manager/dashboard',
   FRANCHISE: '/franchise/dashboard',
+  STOCKHOLDER: '/stockholder/dashboard',
 };
 
 const Login = () => {
