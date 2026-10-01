@@ -15,6 +15,7 @@ import CommissionSettings from './pages/SuperAdmin/CommissionSettings';
 import TargetSettings from './pages/SuperAdmin/TargetSettings';
 import ApprovalWorkflows from './pages/SuperAdmin/ApprovalWorkflows';
 import AuditLogs from './pages/SuperAdmin/AuditLogs';
+import TicketSuperAdmin from './pages/SuperAdmin/TicketSuperAdmin';
 
 // Admin Layout & Pages
 import AdminLayout from './layouts/AdminLayout';
@@ -25,6 +26,7 @@ import FranchiseLeads from './pages/Admin/FranchiseLeads';
 import DailyEntries from './pages/Admin/DailyEntries';
 import HierarchyManagement from './pages/Admin/HierarchyManagement';
 import { OperationalApprovals, OperationalReports } from './pages/Admin/OperationalApprovals';
+import TicketAdmin from './pages/Admin/TicketAdmin';
 
 // Director Layout & Pages
 import DirectorLayout from './layouts/DirectorLayout';
@@ -33,6 +35,7 @@ import DirectorTerritories from './pages/Director/DirectorTerritories';
 import DirectorFranchises from './pages/Director/DirectorFranchises';
 import DirectorManagers from './pages/Director/DirectorManagers';
 import DirectorRankings from './pages/Director/DirectorRankings';
+import TicketDirector from './pages/Director/TicketDirector';
 
 // Head Coordinator Layout & Pages
 import CoordinatorLayout from './layouts/CoordinatorLayout';
@@ -40,6 +43,7 @@ import CoordinatorDashboard from './pages/HeadCoordinator/CoordinatorDashboard';
 import StateHeadOperations from './pages/HeadCoordinator/StateHeadOperations';
 import StateComparison from './pages/HeadCoordinator/StateComparison';
 import CoordinatorApprovals from './pages/HeadCoordinator/CoordinatorApprovals';
+import TicketHeadCoordinator from './pages/HeadCoordinator/TicketHeadCoordinator';
 
 // State Head Layout & Pages
 import StateHeadLayout from './layouts/StateHeadLayout';
@@ -48,6 +52,7 @@ import DistrictOperations from './pages/StateHead/DistrictOperations';
 import SalesManagers from './pages/StateHead/SalesManagers';
 import StateReports from './pages/StateHead/StateReports';
 import StateApprovals from './pages/StateHead/StateApprovals';
+import TicketStateHead from './pages/StateHead/TicketStateHead';
 
 // Sales Manager Layout & Pages
 import SalesManagerLayout from './layouts/SalesManagerLayout';
@@ -56,6 +61,7 @@ import AssignedFranchises from './pages/SalesManager/AssignedFranchises';
 import DailyEntryVerification from './pages/SalesManager/DailyEntryVerification';
 import CollectionFollowup from './pages/SalesManager/CollectionFollowup';
 import FranchiseVisits from './pages/SalesManager/FranchiseVisits';
+import TicketSalesManager from './pages/SalesManager/TicketSalesManager';
 
 // Franchise Layout & Pages
 import FranchiseLayout from './layouts/FranchiseLayout';
@@ -66,6 +72,7 @@ import Customers from './pages/Franchise/Customers';
 import Leads from './pages/Franchise/Leads';
 import CommissionEarnings from './pages/Franchise/CommissionEarnings';
 import PendingTasks from './pages/Franchise/PendingTasks';
+import TicketFranchise from './pages/Franchise/TicketFranchise';
 
 // Stockholder Layout & Pages
 import StockholderLayout from './layouts/StockholderLayout';
@@ -94,6 +101,7 @@ const App = () => {
             <Route path="targets" element={<TargetSettings />} />
             <Route path="approvals" element={<ApprovalWorkflows />} />
             <Route path="audit" element={<AuditLogs />} />
+            <Route path="tickets" element={<TicketSuperAdmin />} />
           </Route>
         </Route>
 
@@ -109,6 +117,7 @@ const App = () => {
             <Route path="hierarchy" element={<HierarchyManagement />} />
             <Route path="approvals" element={<OperationalApprovals />} />
             <Route path="reports" element={<OperationalReports />} />
+            <Route path="tickets" element={<TicketAdmin />} />
           </Route>
         </Route>
 
@@ -121,6 +130,7 @@ const App = () => {
             <Route path="franchises" element={<DirectorFranchises />} />
             <Route path="managers" element={<DirectorManagers />} />
             <Route path="rankings" element={<DirectorRankings />} />
+            <Route path="tickets" element={<TicketDirector />} />
           </Route>
         </Route>
 
@@ -132,6 +142,7 @@ const App = () => {
             <Route path="state-heads" element={<StateHeadOperations />} />
             <Route path="comparison" element={<StateComparison />} />
             <Route path="approvals" element={<CoordinatorApprovals />} />
+            <Route path="tickets" element={<TicketHeadCoordinator />} />
           </Route>
         </Route>
 
@@ -144,6 +155,7 @@ const App = () => {
             <Route path="managers" element={<SalesManagers />} />
             <Route path="reports" element={<StateReports />} />
             <Route path="approvals" element={<StateApprovals />} />
+            <Route path="tickets" element={<TicketStateHead />} />
           </Route>
         </Route>
 
@@ -156,6 +168,7 @@ const App = () => {
             <Route path="daily-verifications" element={<DailyEntryVerification />} />
             <Route path="collections" element={<CollectionFollowup />} />
             <Route path="visits" element={<FranchiseVisits />} />
+            <Route path="tickets" element={<TicketSalesManager />} />
           </Route>
         </Route>
 
@@ -171,6 +184,7 @@ const App = () => {
             <Route path="leads" element={<Leads />} />
             <Route path="commissions" element={<CommissionEarnings />} />
             <Route path="tasks" element={<PendingTasks />} />
+            <Route path="tickets" element={<TicketFranchise />} />
           </Route>
         </Route>
 

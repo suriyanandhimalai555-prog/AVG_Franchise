@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
   Globe2, MapPin, Layers, Clock, AlertTriangle, 
-  BarChart2, LogOut, X, ChevronRight 
+  BarChart2, LogOut, X, ChevronRight , BarChart3
 } from 'lucide-react';
 import Logo from '../../assets/logo.png';
 
@@ -11,6 +11,7 @@ const coordinatorNavItems = [
   { label: 'State Head Operations', path: '/head-coordinator/state-heads', icon: MapPin },
   { label: 'State Comparison Matrix', path: '/head-coordinator/comparison', icon: BarChart2 },
   { label: 'Approvals & Escalations', path: '/head-coordinator/approvals', icon: Clock },
+  { label: 'Ticket Management', path: '/head-coordinator/tickets', icon: AlertTriangle },
 ];
 
 const CoordinatorSidebar = ({ isOpen, onClose }) => {

@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
     LayoutDashboard, Store, UserPlus, Users, FileSpreadsheet,
-    CheckSquare, BarChart3, LogOut, X, ChevronRight, Layers
+    CheckSquare, BarChart3, LogOut, X, ChevronRight, Layers 
 } from 'lucide-react';
 import Logo from '../../assets/logo.png'
 
@@ -15,6 +15,7 @@ const adminNavItems = [
     { label: 'Hierarchy Staff Management', path: '/admin/hierarchy', icon: Layers },
     { label: 'Approvals & Workflows', path: '/admin/approvals', icon: CheckSquare },
     { label: 'Operational Reports & Audits', path: '/admin/reports', icon: BarChart3 },
+    { label: 'Ticket Management', path: '/admin/tickets', icon: BarChart3 },
 ];
 
 const AdminSidebar = ({ isOpen, onClose }) => {

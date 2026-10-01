@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
   Building2, Map, Users, BarChart3, Clock, 
-  Store, LogOut, X, ChevronRight, Layers 
+  Store, LogOut, X, ChevronRight, Layers
 } from 'lucide-react';
 import Logo from '../../assets/logo.png';
 
@@ -13,6 +13,7 @@ const stateHeadNavItems = [
   { label: 'Franchise Network', path: '/state-head/franchises', icon: Building2 },
   { label: 'State Reports', path: '/state-head/reports', icon: BarChart3 },
   { label: 'Pending Approvals', path: '/state-head/approvals', icon: Clock },
+  { label: 'Ticket Management', path: '/state-head/tickets', icon: BarChart3 },
 ];
 
 const StateHeadSidebar = ({ isOpen, onClose }) => {

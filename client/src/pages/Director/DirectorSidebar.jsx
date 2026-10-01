@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
   BarChart3, MapPin, Store, Users, Award, 
-  LogOut, X, ChevronRight 
+  LogOut, X, ChevronRight
 } from 'lucide-react';
 import Logo from '../../assets/logo.png'; // Adjust path based on your folder structure
 
@@ -12,6 +12,7 @@ const directorNavItems = [
   { label: 'Franchise Network', path: '/director/franchises', icon: Store },
   { label: 'Sales Managers', path: '/director/managers', icon: Users },
   { label: 'Performance Rankings', path: '/director/rankings', icon: Award },
+  { label: 'Ticket Management', path: '/director/tickets', icon: BarChart3 },
 ];
 
 const DirectorSidebar = ({ isOpen, onClose }) => {

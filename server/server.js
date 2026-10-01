@@ -5,6 +5,7 @@ import { initDB } from './models/index.js';
 import authRoutes from './routes/authRoutes.js';
 import stockRoutes from './routes/stockRoutes.js';
 import stockRequestRoutes from './routes/stockRequestRoutes.js';
+import ticketRoutes from './routes/ticketRoutes.js';
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/stocks', stockRoutes);
 app.use('/api/stock-requests', stockRequestRoutes);
+app.use('/api/tickets', ticketRoutes);
 
 // Database connection & Auto-sync tables
 initDB();

@@ -17,13 +17,14 @@ import Logo from '../../assets/logo.png';
 
 const navItems = [
   { label: 'Dashboard', path: '/franchise/dashboard', icon: LayoutDashboard },
-  { label: 'Stock Requests Admin', path: '/franchise/stock-requests', icon: LayoutDashboard },
+  { label: 'Stock Requests Admin', path: '/franchise/stock-requests', icon: Store },
   { label: 'Daily Sales & Entries', path: '/franchise/entries', icon: Receipt },
   { label: 'Collections & Dues', path: '/franchise/collections', icon: IndianRupee },
   { label: 'Customers', path: '/franchise/customers', icon: Users },
   { label: 'Leads & Conversions', path: '/franchise/leads', icon: UserPlus },
   { label: 'Commission Earnings', path: '/franchise/commissions', icon: Percent },
   { label: 'Pending Tasks', path: '/franchise/tasks', icon: CheckSquare },
+  { label: 'Rise Ticket', path: '/franchise/tickets', icon: LogOut },
 ];
 
 const FranchiseSidebar = ({ isOpen, onClose }) => {

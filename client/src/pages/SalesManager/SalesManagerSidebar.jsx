@@ -8,7 +8,7 @@ import {
   MapPin, 
   LogOut, 
   X, 
-  ChevronRight 
+  ChevronRight , BarChart3
 } from 'lucide-react';
 import Logo from '../../assets/logo.png';
 
@@ -18,6 +18,7 @@ const navItems = [
   { label: 'Daily Entries', path: '/sales-manager/daily-verifications', icon: CheckSquare },
   { label: 'Collections & Targets', path: '/sales-manager/collections', icon: IndianRupee },
   { label: 'Franchise Visits', path: '/sales-manager/visits', icon: MapPin },
+  { label: 'Ticket Management', path: '/sales-manager/tickets', icon: CheckSquare },
 ];
 
 const SalesManagerSidebar = ({ isOpen, onClose }) => {
