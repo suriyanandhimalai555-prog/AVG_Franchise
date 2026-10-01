@@ -69,6 +69,8 @@ import PendingTasks from './pages/Franchise/PendingTasks';
 // Stockholder Layout & Pages
 import StockholderLayout from './layouts/StockholderLayout';
 import StockholderDashboard from './pages/Stockholder/StockholderDashboard';
+import StockUpdate from './pages/Stockholder/StockUpdate';
+import StockRequest from './pages/Stockholder/StockRequest';
 
 const App = () => {
   return (
@@ -175,6 +177,8 @@ const App = () => {
           <Route path="/stockholder" element={<StockholderLayout />}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<StockholderDashboard />} />
+            <Route path="stock-update" element={<StockUpdate />} />
+            <Route path="stock-requests" element={<StockRequest />} />
           </Route>
         </Route>
 

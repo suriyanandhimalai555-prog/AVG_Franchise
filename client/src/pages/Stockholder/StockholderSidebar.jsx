@@ -18,9 +18,9 @@ const StockholderSidebar = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
 
   const navItems = [
-    { label: 'Overview', path: '/stockholder/dashboard', icon: LayoutDashboard },
-    { label: 'Equity & Portfolio', path: '/stockholder/portfolio', icon: PieChart },
-    { label: 'Dividends & Yield', path: '/stockholder/dividends', icon: TrendingUp },
+    { label: 'Dashboard', path: '/stockholder/dashboard', icon: LayoutDashboard },
+    { label: 'Stock Update', path: '/stockholder/stock-update', icon: PieChart },
+    { label: 'Stock Requests', path: '/stockholder/stock-requests', icon: TrendingUp },
     { label: 'Financial Reports', path: '/stockholder/reports', icon: FileText },
     { label: 'Transactions', path: '/stockholder/transactions', icon: CreditCard },
   ];
