@@ -4,8 +4,8 @@ import { User, Phone, Mail, Lock, Briefcase, MapPin, Building, Home, Hash, Arrow
 import Logo from '../assets/logo.png';
 import { INDIA_LOCATIONS } from '../data/indiaLocations';
 
-// Base URL handling with fallback
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+// Directly read from Vite env
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 
 const Register = () => {
   const navigate = useNavigate();
@@ -42,14 +42,18 @@ const Register = () => {
     setLoading(true);
 
     try {
-      // Safely construct target URL without throwing error or hitting frontend HTML route
-      const cleanBase = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
-      const targetUrl = `${cleanBase}/api/auth/register-franchise`;
+      // Ensure base URL is set in production deployment settings
+      if (!API_BASE_URL && import.meta.env.PROD) {
+        throw new Error('API Base URL is not configured in environment variables.');
+      }
+
+      const targetUrl = `${API_BASE_URL}/api/auth/register-franchise`;
 
       const response = await fetch(targetUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         body: JSON.stringify(formData)
       });
@@ -60,7 +64,7 @@ const Register = () => {
       if (contentType && contentType.includes('application/json')) {
         data = await response.json();
       } else {
-        throw new Error('API server returned HTML instead of JSON. Check your backend deployment/API URL.');
+        throw new Error('Backend route not found or returned invalid format. Verify VITE_API_BASE_URL deployment variable.');
       }
 
       if (!response.ok) {
