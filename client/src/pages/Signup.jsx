@@ -44,8 +44,8 @@ const Register = () => {
     try {
       // Safe dynamic target URL
       const targetUrl = API_BASE_URL.endsWith('/')
-        ? `${API_BASE_URL}api/auth/register-franchise`
-        : `${API_BASE_URL}/api/auth/register-franchise`;
+        ? `${import.meta.env.VITE_API_BASE_URL}api/auth/register-franchise`
+        : `${import.meta.env.VITE_API_BASE_URL}/api/auth/register-franchise`;
 
       const response = await fetch(targetUrl, {
         method: 'POST',
