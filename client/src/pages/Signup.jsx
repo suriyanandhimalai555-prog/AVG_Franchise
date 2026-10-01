@@ -5,7 +5,7 @@ import Logo from '../assets/logo.png';
 import { INDIA_LOCATIONS } from '../data/indiaLocations';
 
 // Fallback handles Vite dev server proxy or standalone backend port
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 const Register = () => {
   const navigate = useNavigate();
