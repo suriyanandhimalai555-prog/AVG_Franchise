@@ -17,6 +17,7 @@ import ApprovalWorkflows from './pages/SuperAdmin/ApprovalWorkflows';
 import AuditLogs from './pages/SuperAdmin/AuditLogs';
 import TicketSuperAdmin from './pages/SuperAdmin/TicketSuperAdmin';
 import FranchiseCheckIn from './pages/SuperAdmin/FranchiseCheckIn';
+import BranchStock from './pages/SuperAdmin/BranchStock';
 
 // Admin Layout & Pages
 import AdminLayout from './layouts/AdminLayout';
@@ -104,6 +105,7 @@ const App = () => {
             <Route path="approvals" element={<ApprovalWorkflows />} />
             <Route path="audit" element={<AuditLogs />} />
             <Route path="tickets" element={<TicketSuperAdmin />} />
+            <Route path="branch-stock" element={<BranchStock />} />
           </Route>
         </Route>
 

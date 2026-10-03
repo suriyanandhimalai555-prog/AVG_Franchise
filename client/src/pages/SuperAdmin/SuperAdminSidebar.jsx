@@ -9,14 +9,15 @@ import Logo from '../../assets/logo.png'
 const navItems = [
   { label: 'Dashboard', path: '/super-admin/dashboard', icon: LayoutDashboard },
   { label: 'Franchise Owners Checkin', path: '/super-admin/franchise-checkin', icon: LayoutDashboard },
+  { label: 'Branch Stock List', path: '/super-admin/branch-stock', icon: LayoutDashboard },
   { label: 'Role & Hierarchy', path: '/super-admin/roles', icon: ShieldCheck },
   { label: 'User Directory', path: '/super-admin/users', icon: Users },
   { label: 'Business Verticals', path: '/super-admin/businesses', icon: Briefcase },
   { label: 'Territory Mapping', path: '/super-admin/territories', icon: MapPin },
-  { label: 'Commissions', path: '/super-admin/commissions', icon: Percent },
-  { label: 'Target Allocation', path: '/super-admin/targets', icon: Target },
-  { label: 'Approvals Queue', path: '/super-admin/approvals', icon: CheckSquare },
-  { label: 'Audit Logs', path: '/super-admin/audit', icon: History },
+  // { label: 'Commissions', path: '/super-admin/commissions', icon: Percent },
+  // { label: 'Target Allocation', path: '/super-admin/targets', icon: Target },
+  // { label: 'Approvals Queue', path: '/super-admin/approvals', icon: CheckSquare },
+  // { label: 'Audit Logs', path: '/super-admin/audit', icon: History },
   { label: 'Ticket Management', path: '/super-admin/tickets', icon: BarChart3 },
 ];
 

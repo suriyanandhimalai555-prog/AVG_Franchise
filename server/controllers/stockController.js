@@ -22,7 +22,7 @@ export const createStock = async (req, res) => {
     const { stockName, singleStockWeight, count } = req.body;
 
     // Validation
-    if (!stockName || !singleStockWeight || !count) {
+    if (!stockName || singleStockWeight === undefined || count === undefined) {
       return res.status(400).json({
         success: false,
         message: 'All fields (Stock Name, Weight, Count) are required.',
@@ -36,16 +36,16 @@ export const createStock = async (req, res) => {
       });
     }
 
-    const newStock = await StockModel.create({
-      stockName,
+    const updatedStock = await StockModel.upsert({
+      stockName: stockName.trim(),
       singleStockWeight: parseFloat(singleStockWeight),
       count: parseInt(count, 10),
     });
 
     return res.status(201).json({
       success: true,
-      message: 'Stock updated successfully',
-      data: newStock,
+      message: 'Stock saved successfully',
+      data: updatedStock,
     });
   } catch (error) {
     console.error('Error creating stock:', error);
