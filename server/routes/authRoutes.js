@@ -7,7 +7,9 @@ import {
   changePassword,
   getRoleCounts,
   getUsersByRole,
-  getAllUsers
+  getAllUsers,
+  getTerritoryOverview, 
+  getStockholdersByState
 } from '../controllers/authController.js';
 import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
 
@@ -37,5 +39,8 @@ router.post(
 router.get('/role-counts', protect, getRoleCounts);
 router.get('/users-by-role/:role', protect, getUsersByRole);
 router.get('/all-users', protect, getAllUsers);
+
+router.get('/territory-overview', protect, getTerritoryOverview);
+router.get('/stockholders-by-state', protect, getStockholdersByState);
 
 export default router;

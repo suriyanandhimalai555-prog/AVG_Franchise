@@ -33,6 +33,10 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  territory: { type: DataTypes.STRING, allowNull: true },
+  state: { type: DataTypes.STRING, allowNull: true },
+  district: { type: DataTypes.STRING, allowNull: true },
+  area: { type: DataTypes.STRING, allowNull: true },
   role: {
     type: DataTypes.ENUM(
       'SUPER_ADMIN',

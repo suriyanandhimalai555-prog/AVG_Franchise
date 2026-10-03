@@ -1,6 +1,6 @@
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
-import { Op } from 'sequelize';
+import { Sequelize, Op } from 'sequelize';
 import { sendCredentialsEmail } from '../utils/sendEmail.js';
 
 const generateToken = (id, role) => {
@@ -64,7 +64,7 @@ export const createSuperAdmin = async (req, res) => {
 };
 
 export const createUserByAdmin = async (req, res) => {
-  const { name, email, mobile, role } = req.body;
+  const { name, email, mobile, role, territory, state, district, area } = req.body;
 
   if (role === 'SUPER_ADMIN') {
     return res.status(403).json({ message: 'Cannot create another Super Admin account.' });
@@ -77,6 +77,10 @@ export const createUserByAdmin = async (req, res) => {
 
   if (!name || !email || !mobile || !role) {
     return res.status(400).json({ message: 'Please provide name, email, mobile, and role.' });
+  }
+
+  if (role === 'STOCKHOLDER' && (!state || !district || !area)) {
+    return res.status(400).json({ message: 'State, District, and Area are required for Stockholders.' });
   }
 
   try {
@@ -100,6 +104,10 @@ export const createUserByAdmin = async (req, res) => {
       password: tempPassword,
       role,
       userCode,
+      territory,
+      state,
+      district,
+      area,
       isPasswordResetRequired: true,
     });
 
@@ -118,6 +126,10 @@ export const createUserByAdmin = async (req, res) => {
         email: newUser.email,
         mobile: newUser.mobile,
         role: newUser.role,
+        territory: newUser.territory,
+        state: newUser.state,
+        district: newUser.district,
+        area: newUser.area,
       },
     });
   } catch (error) {
@@ -125,8 +137,6 @@ export const createUserByAdmin = async (req, res) => {
   }
 };
 
-// @desc Single Login Endpoint for ALL Roles
-// @route POST /api/auth/login
 export const loginUser = async (req, res) => {
   const { identifier, password } = req.body;
 
@@ -161,8 +171,6 @@ export const loginUser = async (req, res) => {
   }
 };
 
-// @desc Force Password Change on First Login
-// @route POST /api/auth/change-password
 export const changePassword = async (req, res) => {
   const { newPassword } = req.body;
 
@@ -186,10 +194,6 @@ export const changePassword = async (req, res) => {
   }
 };
 
-// @desc Public Franchise Application
-// @route POST /api/auth/register-franchise
-// @desc Public Franchise Application
-// @route POST /api/auth/register-franchise
 export const registerFranchise = async (req, res) => {
   const { name, email, mobile, businessType, street, area, state, district, pincode, password } = req.body;
 
@@ -271,14 +275,13 @@ export const getRoleCounts = async (req, res) => {
   }
 };
 
-// GET /api/auth/users-by-role/:role
 export const getUsersByRole = async (req, res) => {
   try {
     const { role } = req.params;
 
     const users = await User.findAll({
       where: { role },
-      attributes: ['id', 'userCode', 'name', 'email', 'mobile', 'isActive', 'createdAt'],
+      attributes: ['id', 'userCode', 'name', 'email', 'mobile', 'territory', 'state', 'district', 'area', 'isActive', 'createdAt'],
       order: [['createdAt', 'DESC']],
     });
 
@@ -289,8 +292,6 @@ export const getUsersByRole = async (req, res) => {
   }
 };
 
-// @desc Get All Users Across All Roles
-// @route GET /api/auth/all-users
 export const getAllUsers = async (req, res) => {
   try {
     const users = await User.findAll({
@@ -313,5 +314,75 @@ export const getAllUsers = async (req, res) => {
   } catch (error) {
     console.error('Error fetching all users:', error);
     return res.status(500).json({ message: 'Failed to retrieve users' });
+  }
+};
+
+// GET /api/auth/territory-overview
+export const getTerritoryOverview = async (req, res) => {
+  try {
+    // 1. Get all distinct states where users exist
+    const stateRecords = await User.findAll({
+      attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('state')), 'state']],
+      where: { state: { [Op.ne]: null } },
+      raw: true,
+    });
+
+    const states = stateRecords.map((r) => r.state).filter(Boolean);
+
+    // 2. Compute counts for each state dynamically from live User data
+    const overview = await Promise.all(
+      states.map(async (state) => {
+        const stockholdersCount = await User.count({
+          where: { role: 'STOCKHOLDER', state },
+        });
+
+        const franchiseCount = await User.count({
+          where: { role: 'FRANCHISE', state },
+        });
+
+        const districtRecords = await User.findAll({
+          attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('district')), 'district']],
+          where: { state, district: { [Op.ne]: null } },
+          raw: true,
+        });
+
+        return {
+          state,
+          stockholdersCount,
+          franchiseCount,
+          districtCount: districtRecords.length,
+        };
+      })
+    );
+
+    return res.status(200).json(overview);
+  } catch (error) {
+    console.error('Error fetching territory overview:', error);
+    return res.status(500).json({ message: 'Failed to aggregate territory statistics.' });
+  }
+};
+
+// GET /api/auth/stockholders-by-state?state=Karnataka
+export const getStockholdersByState = async (req, res) => {
+  try {
+    const { state } = req.query;
+
+    if (!state) {
+      return res.status(400).json({ message: 'State parameter is required.' });
+    }
+
+    const stockholders = await User.findAll({
+      where: {
+        role: 'STOCKHOLDER',
+        state: state,
+      },
+      attributes: ['id', 'userCode', 'name', 'email', 'mobile', 'territory', 'state', 'district', 'area', 'isActive', 'createdAt'],
+      order: [['createdAt', 'DESC']],
+    });
+
+    return res.status(200).json(stockholders);
+  } catch (error) {
+    console.error('Error fetching stockholders:', error);
+    return res.status(500).json({ message: 'Internal server error.' });
   }
 };

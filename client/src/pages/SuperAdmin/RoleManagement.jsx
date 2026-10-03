@@ -1,6 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Shield, MoreVertical, Layers, Search, Filter, X, UserPlus, Loader2, Eye, Mail, Phone, Hash, Calendar, CheckCircle2, XCircle } from 'lucide-react';
+import { Shield, MoreVertical, Layers, Search, Filter, X, UserPlus, Loader2, Eye, Mail, Phone, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+// Sample State and District dataset for the dropdowns
+const STATE_DISTRICT_DATA = {
+  'Tamil Nadu': ['Chennai', 'Coimbatore', 'Madurai', 'Tiruchirappalli', 'Salem', 'Tirunelveli', 'Erode', 'Vellore'],
+  'Karnataka': ['Bengaluru Urban', 'Bengaluru Rural', 'Mysuru', 'Mangaluru', 'Hubballi-Dharwad', 'Belagavi', 'Kalaburagi'],
+  'Kerala': ['Thiruvananthapuram', 'Ermakulam', 'Kozhikode', 'Thrissur', 'Kollam', 'Palakkad', 'Malappuram'],
+  'Andhra Pradesh': ['Visakhapatnam', 'Vijayawada', 'Guntur', 'Tirupati', 'Kakinada', 'Nellore', 'Kurnool'],
+  'Telangana': ['Hyderabad', 'Warangal', 'Nizamabad', 'Karimnagar', 'Khammam', 'Rangareddy'],
+  'Maharashtra': ['Mumbai', 'Pune', 'Nagpur', 'Thane', 'Nashik', 'Chhatrapati Sambhajinagar'],
+  'Delhi': ['Central Delhi', 'East Delhi', 'New Delhi', 'North Delhi', 'South Delhi', 'West Delhi'],
+};
 
 const RoleManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -21,7 +32,13 @@ const RoleManagement = () => {
     email: '',
     mobile: '',
     role: 'ADMIN',
+    territory: '',
+    state: '',
+    district: '',
+    area: '',
   });
+
+  const [availableDistricts, setAvailableDistricts] = useState([]);
 
   const [roleCounts, setRoleCounts] = useState({
     SUPER_ADMIN: 0,
@@ -31,6 +48,7 @@ const RoleManagement = () => {
     STATE_HEAD: 0,
     SALES_MANAGER: 0,
     FRANCHISE: 0,
+    STOCKHOLDER: 0,
   });
 
   const roles = [
@@ -83,6 +101,22 @@ const RoleManagement = () => {
     fetchUserCounts();
   }, []);
 
+  // Handle Input Changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name === 'state') {
+      setFormData((prev) => ({
+        ...prev,
+        state: value,
+        district: '', // Reset district when state changes
+      }));
+      setAvailableDistricts(STATE_DISTRICT_DATA[value] || []);
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
   // Fetch users belonging to the clicked role
   const handleViewRoleUsers = async (roleObj) => {
     setSelectedRoleForView(roleObj);
@@ -115,12 +149,18 @@ const RoleManagement = () => {
     }
   };
 
-  const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
+  // Create User Handler
   const handleCreateUser = async (e) => {
     e.preventDefault();
+
+    // Additional client side validation for STOCKHOLDER
+    if (formData.role === 'STOCKHOLDER') {
+      if (!formData.state || !formData.district || !formData.area) {
+        toast.error('State, District, and Area are required for Stockholders.');
+        return;
+      }
+    }
+
     setLoading(true);
     const baseUrl = import.meta.env.VITE_APP_BASE_URL || 'http://localhost:5000';
     const token = localStorage.getItem('token');
@@ -139,7 +179,16 @@ const RoleManagement = () => {
 
       if (response.ok) {
         toast.success(`User ${data.user.name} created! ID: ${data.user.userCode}`);
-        setFormData({ name: '', email: '', mobile: '', role: 'ADMIN' });
+        setFormData({
+          name: '',
+          email: '',
+          mobile: '',
+          role: 'ADMIN',
+          territory: '',
+          state: '',
+          district: '',
+          area: '',
+        });
         setIsModalOpen(false);
         fetchUserCounts();
       } else {
@@ -223,7 +272,6 @@ const RoleManagement = () => {
                     </td>
                     <td className="py-4 px-5 text-slate-500 max-w-xs truncate">{r.desc}</td>
                     
-                    {/* Actions Column with Dropdown Popover */}
                     <td className="py-4 px-5 text-right relative">
                       <button
                         onClick={(e) => {
@@ -235,7 +283,6 @@ const RoleManagement = () => {
                         <MoreVertical className="w-4 h-4" />
                       </button>
 
-                      {/* Dropdown Menu */}
                       {activeMenuRole === r.id && (
                         <div
                           ref={menuRef}
@@ -261,8 +308,7 @@ const RoleManagement = () => {
       {/* VIEW USERS FOR SELECTED ROLE MODAL */}
       {isViewModalOpen && selectedRoleForView && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            {/* Modal Header */}
+          <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
@@ -273,7 +319,7 @@ const RoleManagement = () => {
                     {selectedRoleForView.title} Accounts
                   </h2>
                   <p className="text-[11px] text-slate-500 font-medium">
-                    Showing all registered active users under role key: <span className="font-mono text-blue-600">{selectedRoleForView.enumKey}</span>
+                    Showing active users under: <span className="font-mono text-blue-600">{selectedRoleForView.enumKey}</span>
                   </p>
                 </div>
               </div>
@@ -285,7 +331,6 @@ const RoleManagement = () => {
               </button>
             </div>
 
-            {/* Modal Content / User Table */}
             <div className="p-6 max-h-[60vh] overflow-y-auto">
               {loadingRoleUsers ? (
                 <div className="flex flex-col items-center justify-center py-12 text-slate-400 gap-2">
@@ -296,9 +341,6 @@ const RoleManagement = () => {
                 <div className="text-center py-12 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
                   <Shield className="w-8 h-8 text-slate-300 mx-auto mb-2" />
                   <p className="text-xs font-bold text-slate-600">No users found for this role</p>
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    Click "Create User for Role" to generate an account under {selectedRoleForView.title}.
-                  </p>
                 </div>
               ) : (
                 <div className="overflow-x-auto border border-slate-100 rounded-xl">
@@ -307,37 +349,28 @@ const RoleManagement = () => {
                       <tr className="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50">
                         <th className="py-3 px-4">User Code</th>
                         <th className="py-3 px-4">Full Name</th>
-                        <th className="py-3 px-4">Contact Details</th>
-                        <th className="py-3 px-4">Status</th>
+                        <th className="py-3 px-4">Contact</th>
+                        <th className="py-3 px-4">Territory / Area</th>
                         <th className="py-3 px-4">Created Date</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-xs font-medium text-slate-700">
                       {roleUsers.map((u) => (
                         <tr key={u.id} className="hover:bg-slate-50/60 transition-colors">
-                          <td className="py-3 px-4 font-mono font-bold text-blue-600">
-                            {u.userCode || 'N/A'}
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="font-bold text-slate-800 block">{u.name}</span>
-                          </td>
+                          <td className="py-3 px-4 font-mono font-bold text-blue-600">{u.userCode || 'N/A'}</td>
+                          <td className="py-3 px-4 font-bold text-slate-800">{u.name}</td>
                           <td className="py-3 px-4 space-y-0.5">
-                            <div className="flex items-center gap-1.5 text-slate-500">
-                              <Mail className="w-3 h-3 text-slate-400" /> {u.email}
-                            </div>
-                            <div className="flex items-center gap-1.5 text-slate-500">
-                              <Phone className="w-3 h-3 text-slate-400" /> {u.mobile}
-                            </div>
+                            <div className="flex items-center gap-1.5 text-slate-500"><Mail className="w-3 h-3" /> {u.email}</div>
+                            <div className="flex items-center gap-1.5 text-slate-500"><Phone className="w-3 h-3" /> {u.mobile}</div>
                           </td>
                           <td className="py-3 px-4">
-                            {u.isActive ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">
-                                <CheckCircle2 className="w-3 h-3" /> Active
-                              </span>
+                            {u.state || u.area ? (
+                              <div className="text-[11px] text-slate-600">
+                                <span className="font-semibold">{u.area || 'N/A'}</span>, {u.district || ''} ({u.state || ''})
+                                {u.territory && <span className="block text-[10px] text-blue-600 font-medium">Territory: {u.territory}</span>}
+                              </div>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-50 text-red-600 border border-red-100">
-                                <XCircle className="w-3 h-3" /> Inactive
-                              </span>
+                              <span className="text-slate-400 text-[11px]">N/A</span>
                             )}
                           </td>
                           <td className="py-3 px-4 text-slate-400 font-mono text-[11px]">
@@ -351,7 +384,6 @@ const RoleManagement = () => {
               )}
             </div>
 
-            {/* Modal Footer */}
             <div className="px-6 py-3 border-t border-slate-100 bg-slate-50/50 flex justify-end">
               <button
                 onClick={() => setIsViewModalOpen(false)}
@@ -367,7 +399,7 @@ const RoleManagement = () => {
       {/* CREATE USER MODAL */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-blue-600" />
@@ -381,7 +413,27 @@ const RoleManagement = () => {
               </button>
             </div>
 
-            <form onSubmit={handleCreateUser} className="p-6 space-y-4">
+            <form onSubmit={handleCreateUser} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Assign System Role
+                </label>
+                <select
+                  name="role"
+                  value={formData.role}
+                  onChange={handleInputChange}
+                  className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition"
+                >
+                  <option value="ADMIN">Operational Admin</option>
+                  <option value="DIRECTOR">Director Analytics</option>
+                  <option value="HEAD_COORDINATOR">Head Coordinator</option>
+                  <option value="STATE_HEAD">State Head</option>
+                  <option value="SALES_MANAGER">Sales Manager</option>
+                  <option value="FRANCHISE">Franchise Partner</option>
+                  <option value="STOCKHOLDER">Stockholder / Investor</option>
+                </select>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Full Name
@@ -427,25 +479,86 @@ const RoleManagement = () => {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Assign System Role
-                </label>
-                <select
-                  name="role"
-                  value={formData.role}
-                  onChange={handleInputChange}
-                  className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition"
-                >
-                  <option value="ADMIN">Operational Admin</option>
-                  <option value="DIRECTOR">Director Analytics</option>
-                  <option value="HEAD_COORDINATOR">Head Coordinator</option>
-                  <option value="STATE_HEAD">State Head</option>
-                  <option value="SALES_MANAGER">Sales Manager</option>
-                  <option value="FRANCHISE">Franchise Partner</option>
-                  <option value="STOCKHOLDER">Stockholder</option>
-                </select>
-              </div>
+              {/* DYNAMIC TERRITORY & LOCATION SECTION FOR STOCKHOLDER */}
+              {formData.role === 'STOCKHOLDER' && (
+                <div className="pt-2 border-t border-slate-100 space-y-3.5">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-blue-600">
+                    <MapPin className="w-4 h-4" /> Stockholder Region & Territory Assignment
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Territory Region
+                    </label>
+                    <input
+                      type="text"
+                      name="territory"
+                      value={formData.territory}
+                      onChange={handleInputChange}
+                      placeholder="e.g. South Zone / Zone-4"
+                      className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        State
+                      </label>
+                      <select
+                        name="state"
+                        required={formData.role === 'STOCKHOLDER'}
+                        value={formData.state}
+                        onChange={handleInputChange}
+                        className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition"
+                      >
+                        <option value="">Select State</option>
+                        {Object.keys(STATE_DISTRICT_DATA).map((state) => (
+                          <option key={state} value={state}>
+                            {state}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        District
+                      </label>
+                      <select
+                        name="district"
+                        required={formData.role === 'STOCKHOLDER'}
+                        value={formData.district}
+                        disabled={!formData.state}
+                        onChange={handleInputChange}
+                        className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition disabled:opacity-50"
+                      >
+                        <option value="">Select District</option>
+                        {availableDistricts.map((dist) => (
+                          <option key={dist} value={dist}>
+                            {dist}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Area / Locality (Typed by Admin)
+                    </label>
+                    <input
+                      type="text"
+                      name="area"
+                      required={formData.role === 'STOCKHOLDER'}
+                      value={formData.area}
+                      onChange={handleInputChange}
+                      placeholder="e.g. Indiranagar Sector 3"
+                      className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition"
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="pt-2 flex items-center justify-end gap-3 border-t border-slate-100">
                 <button
