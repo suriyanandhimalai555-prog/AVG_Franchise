@@ -16,6 +16,7 @@ import TargetSettings from './pages/SuperAdmin/TargetSettings';
 import ApprovalWorkflows from './pages/SuperAdmin/ApprovalWorkflows';
 import AuditLogs from './pages/SuperAdmin/AuditLogs';
 import TicketSuperAdmin from './pages/SuperAdmin/TicketSuperAdmin';
+import FranchiseCheckIn from './pages/SuperAdmin/FranchiseCheckIn';
 
 // Admin Layout & Pages
 import AdminLayout from './layouts/AdminLayout';
@@ -93,6 +94,7 @@ const App = () => {
           <Route path="/super-admin" element={<SuperAdminLayout />}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<SuperAdminDashboard />} />
+            <Route path="franchise-checkin" element={<FranchiseCheckIn />} />
             <Route path="roles" element={<RoleManagement />} />
             <Route path="users" element={<UserManagement />} />
             <Route path="businesses" element={<BusinessVerticals />} />

@@ -8,6 +8,7 @@ import Logo from '../../assets/logo.png'
 
 const navItems = [
   { label: 'Dashboard', path: '/super-admin/dashboard', icon: LayoutDashboard },
+  { label: 'Franchise Owners Checkin', path: '/super-admin/franchise-checkin', icon: LayoutDashboard },
   { label: 'Role & Hierarchy', path: '/super-admin/roles', icon: ShieldCheck },
   { label: 'User Directory', path: '/super-admin/users', icon: Users },
   { label: 'Business Verticals', path: '/super-admin/businesses', icon: Briefcase },

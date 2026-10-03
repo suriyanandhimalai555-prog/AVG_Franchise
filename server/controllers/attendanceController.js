@@ -98,3 +98,39 @@ export const checkOut = async (req, res) => {
     return res.status(500).json({ message: 'Failed to process check-out' });
   }
 };
+
+export const getAllAttendance = async (req, res) => {
+  const { franchiseId, date } = req.query;
+
+  try {
+    const whereClause = {};
+
+    if (franchiseId) {
+      whereClause.franchise_id = franchiseId;
+    }
+
+    if (date) {
+      const selectedDate = new Date(date);
+      const startOfDay = new Date(selectedDate.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(selectedDate.setHours(23, 59, 59, 999));
+
+      whereClause.check_in_time = {
+        [Op.between]: [startOfDay, endOfDay],
+      };
+    }
+
+    const records = await Attendance.findAll({
+      where: whereClause,
+      order: [['check_in_time', 'DESC']],
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: records.length,
+      data: records,
+    });
+  } catch (error) {
+    console.error('Error fetching all attendance records:', error);
+    return res.status(500).json({ success: false, message: 'Server error fetching attendance data' });
+  }
+};
