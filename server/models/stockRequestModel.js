@@ -1,6 +1,7 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/db.js';
 import { Stock } from './stockModel.js';
+import User from './User.js';
 
 export const StockRequest = sequelize.define('StockRequest', {
   id: {
@@ -8,7 +9,23 @@ export const StockRequest = sequelize.define('StockRequest', {
     primaryKey: true,
     autoIncrement: true,
   },
-  franchise_name: {
+  franchise_id: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    references: {
+      model: User,
+      key: 'id',
+    },
+  },
+  stockholder_id: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    references: {
+      model: User,
+      key: 'id',
+    },
+  },
+  district: {
     type: DataTypes.STRING,
     allowNull: false,
   },
@@ -39,6 +56,6 @@ export const StockRequest = sequelize.define('StockRequest', {
   updatedAt: 'updated_at',
 });
 
-// Setup Association
 StockRequest.belongsTo(Stock, { foreignKey: 'stock_id', as: 'stock' });
-Stock.hasMany(StockRequest, { foreignKey: 'stock_id' });
+StockRequest.belongsTo(User, { foreignKey: 'franchise_id', as: 'franchise' });
+StockRequest.belongsTo(User, { foreignKey: 'stockholder_id', as: 'stockholder' });

@@ -1,14 +1,18 @@
 import { StockModel } from '../models/stockModel.js';
 
+// Fetch stocks based on user role and district
 export const getStocks = async (req, res) => {
   try {
-    const stocks = await StockModel.getAll();
+    const user = req.user;
+    
+    // Pass user context so model can filter by district/user ID
+    const stocks = await StockModel.getAll(user);
+    
     return res.status(200).json({
       success: true,
       data: stocks,
     });
   } catch (error) {
-    console.error('Error fetching stocks:', error);
     return res.status(500).json({
       success: false,
       message: 'Failed to retrieve stocks',
@@ -17,11 +21,40 @@ export const getStocks = async (req, res) => {
   }
 };
 
+// Super Admin Controller: Fetch all stocks across all branches/districts
+export const getAllBranchStocks = async (req, res) => {
+  try {
+    const user = req.user;
+
+    // Optional Super Admin check
+    if (user.role !== 'SUPER_ADMIN' && user.role !== 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Super Admin permissions required.',
+      });
+    }
+
+    const allStocks = await StockModel.getAllGlobal();
+    
+    return res.status(200).json({
+      success: true,
+      data: allStocks,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve global inventory data',
+      error: error.message,
+    });
+  }
+};
+
+// Upsert / Create Stock
 export const createStock = async (req, res) => {
   try {
     const { stockName, singleStockWeight, count } = req.body;
+    const user = req.user;
 
-    // Validation
     if (!stockName || singleStockWeight === undefined || count === undefined) {
       return res.status(400).json({
         success: false,
@@ -29,26 +62,26 @@ export const createStock = async (req, res) => {
       });
     }
 
-    if (Number(singleStockWeight) <= 0 || Number(count) <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Weight and count must be positive numbers.',
-      });
-    }
+    const weightNum = parseFloat(singleStockWeight);
+    const countNum = parseInt(count, 10);
 
     const updatedStock = await StockModel.upsert({
       stockName: stockName.trim(),
-      singleStockWeight: parseFloat(singleStockWeight),
-      count: parseInt(count, 10),
+      singleStockWeight: weightNum,
+      count: countNum,
+      totalWeight: weightNum * countNum,
+      district: user.district || 'Unassigned',
+      state: user.state || '',
+      userId: user.id,
+      branchName: user.name || user.branchName || 'Branch Main',
     });
 
     return res.status(201).json({
       success: true,
-      message: 'Stock saved successfully',
+      message: 'Stock updated successfully',
       data: updatedStock,
     });
   } catch (error) {
-    console.error('Error creating stock:', error);
     return res.status(500).json({
       success: false,
       message: 'Failed to save stock entry',

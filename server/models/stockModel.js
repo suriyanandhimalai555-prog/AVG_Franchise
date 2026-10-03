@@ -1,5 +1,6 @@
 import { DataTypes } from 'sequelize';
-import sequelize from '../config/db.js'; // Ensure path points to your Sequelize file
+import sequelize from '../config/db.js';
+import User from './User.js';
 
 export const Stock = sequelize.define('Stock', {
   id: {
@@ -19,6 +20,19 @@ export const Stock = sequelize.define('Stock', {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
+  district: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: 'Headquarters', // Provides default value so PostgreSQL ALTER TABLE succeeds for existing rows
+  },
+  stockholder_id: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: {
+      model: User,
+      key: 'id',
+    },
+  },
   total_weight: {
     type: DataTypes.VIRTUAL,
     get() {
@@ -37,46 +51,49 @@ export const Stock = sequelize.define('Stock', {
   updatedAt: 'updated_at',
 });
 
+Stock.belongsTo(User, { foreignKey: 'stockholder_id', as: 'stockholder' });
+
 export const StockModel = {
-  // Fetch all stocks
-  async getAll() {
+  // Fetch stocks filtered by user role and district
+  async getAll(user) {
+    if (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN') {
+      return await Stock.findAll({
+        include: [{ model: User, as: 'stockholder', attributes: ['id', 'name', 'district', 'state'] }],
+        order: [['created_at', 'DESC']],
+      });
+    }
+
+    // Stockholders only see inventory in their district
     return await Stock.findAll({
+      where: { district: user.district },
+      include: [{ model: User, as: 'stockholder', attributes: ['id', 'name', 'district', 'state'] }],
       order: [['created_at', 'DESC']],
     });
   },
 
-  // Fetch single stock by ID
   async getById(id) {
     return await Stock.findByPk(id);
   },
 
-  // Insert a new stock entry
-  async create({ stockName, singleStockWeight, count }) {
+  async upsert({ stockName, singleStockWeight, count, district, stockholderId }) {
+    const existingStock = await Stock.findOne({
+      where: { stock_name: stockName, district: district },
+    });
+
+    if (existingStock) {
+      return await existingStock.update({
+        single_stock_weight: singleStockWeight,
+        count: count,
+        stockholder_id: stockholderId || existingStock.stockholder_id,
+      });
+    }
+
     return await Stock.create({
       stock_name: stockName,
       single_stock_weight: singleStockWeight,
       count: count,
+      district: district,
+      stockholder_id: stockholderId,
     });
-  },
-
-  // Update existing stock entry
-  async updateById(id, { stockName, singleStockWeight, count }) {
-    const stock = await Stock.findByPk(id);
-    if (!stock) return null;
-
-    return await stock.update({
-      stock_name: stockName,
-      single_stock_weight: singleStockWeight,
-      count: count,
-    });
-  },
-
-  // Delete stock entry
-  async deleteById(id) {
-    const stock = await Stock.findByPk(id);
-    if (!stock) return null;
-
-    await stock.destroy();
-    return stock;
   },
 };

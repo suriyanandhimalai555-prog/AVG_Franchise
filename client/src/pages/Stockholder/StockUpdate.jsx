@@ -17,11 +17,18 @@ const StockUpdate = () => {
 
   const baseUrl = import.meta.env.VITE_APP_BASE_URL || 'http://localhost:5000';
 
-  // Fetch stocks from Backend API
+  // Fetch stocks from Backend API with Auth Token
   const fetchStocks = async () => {
     setFetching(true);
     try {
-      const res = await fetch(`${baseUrl}/api/stocks`);
+      const token = localStorage.getItem('token') || '';
+      const res = await fetch(`${baseUrl}/api/stocks`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
       const result = await res.json();
       if (res.ok && result.success) {
         setStocks(result.data);

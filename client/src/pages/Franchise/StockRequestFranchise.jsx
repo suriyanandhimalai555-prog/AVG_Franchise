@@ -19,32 +19,51 @@ const StockRequestFranchise = () => {
 
   const baseUrl = import.meta.env.VITE_APP_BASE_URL || 'http://localhost:5000';
 
-  // 1. Fetch available stock items
+  // Helper to get token from localStorage
+  const getAuthHeader = () => {
+    const token = localStorage.getItem('token') || '';
+    return {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    };
+  };
+
+  // 1. Fetch available stock items (with Auth token)
   const fetchStocks = async () => {
     setLoadingStocks(true);
     try {
-      const res = await fetch(`${baseUrl}/api/stocks`);
+      const res = await fetch(`${baseUrl}/api/stocks`, {
+        headers: getAuthHeader(),
+      });
       const result = await res.json();
       if (res.ok && result.success) {
-        setStocks(result.data);
+        setStocks(result.data || []);
+      } else {
+        toast.error(result.message || 'Failed to load stock list');
       }
     } catch (err) {
+      console.error('Fetch Stocks Error:', err);
       toast.error('Failed to load stock list');
     } finally {
       setLoadingStocks(false);
     }
   };
 
-  // 2. Fetch submitted stock requests
+  // 2. Fetch submitted stock requests (with Auth token)
   const fetchRequests = async () => {
     setLoadingRequests(true);
     try {
-      const res = await fetch(`${baseUrl}/api/stock-requests`);
+      const res = await fetch(`${baseUrl}/api/stock-requests`, {
+        headers: getAuthHeader(),
+      });
       const result = await res.json();
       if (res.ok && result.success) {
-        setRequests(result.data);
+        setRequests(result.data || []);
+      } else {
+        toast.error(result.message || 'Failed to load requested stock history');
       }
     } catch (err) {
+      console.error('Fetch Requests Error:', err);
       toast.error('Failed to load requested stock history');
     } finally {
       setLoadingRequests(false);
@@ -64,7 +83,7 @@ const StockRequestFranchise = () => {
     try {
       const res = await fetch(`${baseUrl}/api/stock-requests/create`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeader(),
         body: JSON.stringify(formData),
       });
 
@@ -79,6 +98,7 @@ const StockRequestFranchise = () => {
         toast.error(result.message || 'Failed to submit request');
       }
     } catch (err) {
+      console.error('Submit Request Error:', err);
       toast.error('Server connection failed');
     } finally {
       setSubmitting(false);
@@ -103,11 +123,14 @@ const StockRequestFranchise = () => {
             className="p-2.5 text-slate-600 hover:bg-slate-100 rounded-xl border border-slate-200 transition"
             title="Refresh Data"
           >
-            <RefreshCw className={`w-4 h-4 ${loadingRequests ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${loadingRequests || loadingStocks ? 'animate-spin' : ''}`} />
           </button>
 
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => {
+              fetchStocks(); // Fetch fresh stocks when opening modal
+              setIsModalOpen(true);
+            }}
             className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md shadow-blue-600/20 active:scale-[0.98] transition-all"
           >
             <Plus className="w-4 h-4" />
@@ -221,7 +244,7 @@ const StockRequestFranchise = () => {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. AVG Chennai Main"
+                    placeholder="e.g. AVG Trichy Main"
                     value={formData.franchiseName}
                     onChange={(e) => setFormData({ ...formData, franchiseName: e.target.value })}
                     className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"

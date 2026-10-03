@@ -1,17 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Shield, MoreVertical, Layers, Search, Filter, X, UserPlus, Loader2, Eye, Mail, Phone, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
-
-// Sample State and District dataset for the dropdowns
-const STATE_DISTRICT_DATA = {
-  'Tamil Nadu': ['Chennai', 'Coimbatore', 'Madurai', 'Tiruchirappalli', 'Salem', 'Tirunelveli', 'Erode', 'Vellore'],
-  'Karnataka': ['Bengaluru Urban', 'Bengaluru Rural', 'Mysuru', 'Mangaluru', 'Hubballi-Dharwad', 'Belagavi', 'Kalaburagi'],
-  'Kerala': ['Thiruvananthapuram', 'Ermakulam', 'Kozhikode', 'Thrissur', 'Kollam', 'Palakkad', 'Malappuram'],
-  'Andhra Pradesh': ['Visakhapatnam', 'Vijayawada', 'Guntur', 'Tirupati', 'Kakinada', 'Nellore', 'Kurnool'],
-  'Telangana': ['Hyderabad', 'Warangal', 'Nizamabad', 'Karimnagar', 'Khammam', 'Rangareddy'],
-  'Maharashtra': ['Mumbai', 'Pune', 'Nagpur', 'Thane', 'Nashik', 'Chhatrapati Sambhajinagar'],
-  'Delhi': ['Central Delhi', 'East Delhi', 'New Delhi', 'North Delhi', 'South Delhi', 'West Delhi'],
-};
+import { INDIA_LOCATIONS } from '../../data/indiaLocations'; // Import shared locations data
 
 const RoleManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -106,12 +96,13 @@ const RoleManagement = () => {
     const { name, value } = e.target;
 
     if (name === 'state') {
+      const districts = INDIA_LOCATIONS[value] || [];
       setFormData((prev) => ({
         ...prev,
         state: value,
         district: '', // Reset district when state changes
       }));
-      setAvailableDistricts(STATE_DISTRICT_DATA[value] || []);
+      setAvailableDistricts(districts);
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -153,7 +144,7 @@ const RoleManagement = () => {
   const handleCreateUser = async (e) => {
     e.preventDefault();
 
-    // Additional client side validation for STOCKHOLDER
+    // Validation for roles requiring location details
     if (formData.role === 'STOCKHOLDER') {
       if (!formData.state || !formData.district || !formData.area) {
         toast.error('State, District, and Area are required for Stockholders.');
@@ -189,6 +180,7 @@ const RoleManagement = () => {
           district: '',
           area: '',
         });
+        setAvailableDistricts([]);
         setIsModalOpen(false);
         fetchUserCounts();
       } else {
@@ -510,10 +502,10 @@ const RoleManagement = () => {
                         required={formData.role === 'STOCKHOLDER'}
                         value={formData.state}
                         onChange={handleInputChange}
-                        className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition"
+                        className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition cursor-pointer"
                       >
                         <option value="">Select State</option>
-                        {Object.keys(STATE_DISTRICT_DATA).map((state) => (
+                        {Object.keys(INDIA_LOCATIONS).map((state) => (
                           <option key={state} value={state}>
                             {state}
                           </option>
@@ -531,7 +523,7 @@ const RoleManagement = () => {
                         value={formData.district}
                         disabled={!formData.state}
                         onChange={handleInputChange}
-                        className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition disabled:opacity-50"
+                        className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition disabled:opacity-50 cursor-pointer"
                       >
                         <option value="">Select District</option>
                         {availableDistricts.map((dist) => (
