@@ -6,7 +6,7 @@ import User from '../models/User.js';
 // Get requests filtered by user role and district
 export const getStockRequests = async (req, res) => {
   try {
-    const user = req.user; // Set by auth middleware (protect)
+    const user = req.user; // Set by auth middleware
     let filter = {};
 
     if (user.role === 'STOCKHOLDER') {
@@ -19,8 +19,16 @@ export const getStockRequests = async (req, res) => {
       where: filter,
       include: [
         { model: Stock, as: 'stock' },
-        { model: User, as: 'franchise', attributes: ['id', 'name', 'email', 'mobile', 'district', 'area'] },
-        { model: User, as: 'stockholder', attributes: ['id', 'name', 'email', 'mobile', 'district'] },
+        { 
+          model: User, 
+          as: 'franchise', 
+          attributes: ['id', 'name', 'email', 'mobile', 'district', 'area', 'businessType'] 
+        },
+        { 
+          model: User, 
+          as: 'stockholder', 
+          attributes: ['id', 'name', 'email', 'mobile', 'district'] 
+        },
       ],
       order: [['created_at', 'DESC']],
     });
@@ -41,7 +49,7 @@ export const createStockRequest = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Stock item and count are required.' });
     }
 
-    // 1. Fetch current Franchise details
+    // 1. Fetch current Franchise details including businessType
     const franchise = await User.findByPk(franchiseId);
     if (!franchise || !franchise.district) {
       return res.status(400).json({ success: false, message: 'Franchise district location is not defined.' });
@@ -63,7 +71,7 @@ export const createStockRequest = async (req, res) => {
       });
     }
 
-    // 3. Create the stock request mapped to the target Stockholder
+    // 3. Create the stock request (franchise_id links directly to User model)
     const newRequest = await StockRequest.create({
       franchise_id: franchise.id,
       stockholder_id: stockholder.id,
@@ -76,7 +84,8 @@ export const createStockRequest = async (req, res) => {
     const fullRequest = await StockRequest.findByPk(newRequest.id, {
       include: [
         { model: Stock, as: 'stock' },
-        { model: User, as: 'stockholder', attributes: ['name', 'email', 'mobile'] },
+        { model: User, as: 'franchise', attributes: ['id', 'name', 'email', 'mobile', 'district', 'area', 'businessType'] },
+        { model: User, as: 'stockholder', attributes: ['id', 'name', 'email', 'mobile'] },
       ],
     });
 

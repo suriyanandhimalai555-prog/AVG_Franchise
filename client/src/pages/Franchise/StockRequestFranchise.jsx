@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Send, Package, Hash, Building2, FileText, Loader2, Plus, RefreshCw, X, Clock, CheckCircle2, XCircle } from 'lucide-react';
+import { Send, Package, Hash, FileText, Loader2, Plus, RefreshCw, X, Clock, CheckCircle2, XCircle, Building2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const StockRequestFranchise = () => {
   const [stocks, setStocks] = useState([]);
   const [requests, setRequests] = useState([]);
+  const [profile, setProfile] = useState(null);
   const [loadingStocks, setLoadingStocks] = useState(true);
   const [loadingRequests, setLoadingRequests] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
-    franchiseName: '',
     stockId: '',
     requestedCount: '',
     notes: '',
@@ -19,7 +19,6 @@ const StockRequestFranchise = () => {
 
   const baseUrl = import.meta.env.VITE_APP_BASE_URL || 'http://localhost:5000';
 
-  // Helper to get token from localStorage
   const getAuthHeader = () => {
     const token = localStorage.getItem('token') || '';
     return {
@@ -28,7 +27,20 @@ const StockRequestFranchise = () => {
     };
   };
 
-  // 1. Fetch available stock items (with Auth token)
+  const fetchProfile = async () => {
+    try {
+      const res = await fetch(`${baseUrl}/api/users/profile`, {
+        headers: getAuthHeader(),
+      });
+      const result = await res.json();
+      if (res.ok && result.success) {
+        setProfile(result.data);
+      }
+    } catch (err) {
+      console.error('Fetch Profile Error:', err);
+    }
+  };
+
   const fetchStocks = async () => {
     setLoadingStocks(true);
     try {
@@ -42,14 +54,12 @@ const StockRequestFranchise = () => {
         toast.error(result.message || 'Failed to load stock list');
       }
     } catch (err) {
-      console.error('Fetch Stocks Error:', err);
       toast.error('Failed to load stock list');
     } finally {
       setLoadingStocks(false);
     }
   };
 
-  // 2. Fetch submitted stock requests (with Auth token)
   const fetchRequests = async () => {
     setLoadingRequests(true);
     try {
@@ -63,7 +73,6 @@ const StockRequestFranchise = () => {
         toast.error(result.message || 'Failed to load requested stock history');
       }
     } catch (err) {
-      console.error('Fetch Requests Error:', err);
       toast.error('Failed to load requested stock history');
     } finally {
       setLoadingRequests(false);
@@ -71,11 +80,11 @@ const StockRequestFranchise = () => {
   };
 
   useEffect(() => {
+    fetchProfile();
     fetchStocks();
     fetchRequests();
-  }, [baseUrl]);
+  }, []);
 
-  // Handle Form Submit inside Popup Modal
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -91,14 +100,13 @@ const StockRequestFranchise = () => {
 
       if (res.ok && result.success) {
         toast.success('Stock request sent to Stockholder!');
-        setFormData({ franchiseName: '', stockId: '', requestedCount: '', notes: '' });
-        setIsModalOpen(false); // Close Modal
-        fetchRequests(); // Refresh Table Data
+        setFormData({ stockId: '', requestedCount: '', notes: '' });
+        setIsModalOpen(false);
+        fetchRequests();
       } else {
         toast.error(result.message || 'Failed to submit request');
       }
     } catch (err) {
-      console.error('Submit Request Error:', err);
       toast.error('Server connection failed');
     } finally {
       setSubmitting(false);
@@ -107,7 +115,6 @@ const StockRequestFranchise = () => {
 
   return (
     <div className="space-y-6">
-      {/* Top Header Card */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
         <div>
           <h1 className="text-xl font-bold text-slate-800 tracking-tight">Franchise Stock Requests</h1>
@@ -128,7 +135,7 @@ const StockRequestFranchise = () => {
 
           <button
             onClick={() => {
-              fetchStocks(); // Fetch fresh stocks when opening modal
+              fetchStocks();
               setIsModalOpen(true);
             }}
             className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md shadow-blue-600/20 active:scale-[0.98] transition-all"
@@ -139,7 +146,6 @@ const StockRequestFranchise = () => {
         </div>
       </div>
 
-      {/* Stock Requests Table */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
           <h2 className="text-sm font-bold text-slate-800">My Stock Request History</h2>
@@ -171,7 +177,16 @@ const StockRequestFranchise = () => {
               <tbody className="divide-y divide-slate-100 text-xs font-medium text-slate-700">
                 {requests.map((req) => (
                   <tr key={req.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="py-4 px-6 font-bold text-slate-800">{req.franchise_name}</td>
+                    <td className="py-4 px-6 font-bold text-slate-800">
+                      <div className="flex flex-col gap-0.5">
+                        <span>{req.franchise?.name || 'My Franchise'}</span>
+                        {req.franchise?.businessType && (
+                          <span className="w-fit text-[10px] px-2 py-0.5 rounded font-bold bg-indigo-50 text-indigo-600 border border-indigo-200/60 uppercase">
+                            {req.franchise.businessType}
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="py-4 px-6 flex items-center gap-2">
                       <Package className="w-4 h-4 text-blue-600 shrink-0" />
                       {req.stock?.stock_name || 'Item Removed'}
@@ -212,12 +227,9 @@ const StockRequestFranchise = () => {
         )}
       </div>
 
-      {/* POPUP MODAL FOR STOCK REQUEST */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-150">
           <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden">
-            
-            {/* Modal Header */}
             <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Package className="w-5 h-5 text-blue-400" />
@@ -231,26 +243,24 @@ const StockRequestFranchise = () => {
               </button>
             </div>
 
-            {/* Modal Form */}
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  Franchise Name / Code
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <Building2 className="w-4 h-4" />
+              {/* Auto-Fetched Franchise & Business Type Info Header */}
+              {profile && (
+                <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <Building2 className="w-4 h-4 text-blue-600" />
+                    <div>
+                      <p className="text-xs font-bold text-slate-800">{profile.name}</p>
+                      <p className="text-[11px] text-slate-500">{profile.district}</p>
+                    </div>
                   </div>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. AVG Trichy Main"
-                    value={formData.franchiseName}
-                    onChange={(e) => setFormData({ ...formData, franchiseName: e.target.value })}
-                    className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
-                  />
+                  {profile.businessType && (
+                    <span className="text-[10px] px-2 py-0.5 rounded font-bold bg-indigo-50 text-indigo-600 border border-indigo-200/60 uppercase">
+                      {profile.businessType}
+                    </span>
+                  )}
                 </div>
-              </div>
+              )}
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
@@ -314,7 +324,6 @@ const StockRequestFranchise = () => {
                 </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="flex items-center gap-3 pt-2">
                 <button
                   type="button"
@@ -342,7 +351,6 @@ const StockRequestFranchise = () => {
                 </button>
               </div>
             </form>
-
           </div>
         </div>
       )}

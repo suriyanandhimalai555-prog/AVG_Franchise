@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2, XCircle, Clock, Package, RefreshCw, Loader2, MapPin } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, Package, RefreshCw, Loader2, MapPin, Building2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const StockRequest = () => {
@@ -13,7 +13,6 @@ const StockRequest = () => {
     const token = localStorage.getItem('token');
 
     try {
-      // Send Authorization header so backend can filter requests by the Stockholder's district
       const res = await fetch(`${baseUrl}/api/stock-requests`, {
         headers: {
           'Content-Type': 'application/json',
@@ -24,7 +23,6 @@ const StockRequest = () => {
       const result = await res.json();
 
       if (res.ok && (result.success || Array.isArray(result))) {
-        // Handle array responses directly or nested within result.data
         const data = Array.isArray(result) ? result : result.data || [];
         setRequests(data);
       } else {
@@ -113,14 +111,20 @@ const StockRequest = () => {
                 {requests.map((req) => (
                   <tr key={req.id} className="hover:bg-slate-50/50">
                     <td className="py-4 px-6 font-bold text-slate-800">
-                      {req.franchise_name || req.user?.name || 'N/A'}
+                      <div className="flex flex-col gap-0.5">
+                        <span>{req.franchise?.name || req.franchise_name || 'N/A'}</span>
+                        {req.franchise?.businessType && (
+                          <span className="w-fit text-[10px] px-2 py-0.5 rounded font-bold bg-indigo-50 text-indigo-600 border border-indigo-200/60 uppercase">
+                            {req.franchise.businessType}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-1 text-slate-500 text-[11px]">
                         <MapPin className="w-3 h-3 text-slate-400" />
                         <span>
-                          {req.district || req.user?.district || 'N/A'}
-                          {req.state || req.user?.state ? `, ${req.state || req.user?.state}` : ''}
+                          {req.district || req.franchise?.district || 'N/A'}
                         </span>
                       </div>
                     </td>
