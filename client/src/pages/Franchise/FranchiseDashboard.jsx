@@ -26,10 +26,12 @@ const RAW_API_URL = import.meta.env.VITE_APP_BASE_URL || '';
 const API_BASE_URL = RAW_API_URL.endsWith('/') ? RAW_API_URL.slice(0, -1) : RAW_API_URL;
 
 const FranchiseDashboard = () => {
-  const FRANCHISE_ID = 'FR-NORTH-01'; // Can be populated dynamically from Auth Context or LocalStorage
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const token = localStorage.getItem('token') || '';
+  const FRANCHISE_ID = user.id || user.franchise_id || user._id || null;
 
   const [attendance, setAttendance] = useState({
-    status: 'NOT_CHECKED_IN', // 'NOT_CHECKED_IN', 'CHECKED_IN', 'CHECKED_OUT'
+    status: 'NOT_CHECKED_IN',
     rawCheckIn: null,
     rawCheckOut: null,
     checkInTime: null,
@@ -52,7 +54,6 @@ const FranchiseDashboard = () => {
     { id: 3, title: 'Verify Bank Transfer TXN-9084', priority: 'High', due: 'Immediate' },
   ]);
 
-  // Helper to format duration in hours, minutes, and seconds
   const calculateDuration = (startTime, endTime) => {
     if (!startTime) return '00h 00m 00s';
     const start = new Date(startTime).getTime();
@@ -67,7 +68,6 @@ const FranchiseDashboard = () => {
     return `${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
   };
 
-  // Live Timer effect for active session duration
   useEffect(() => {
     let timer;
     if (attendance.status === 'CHECKED_IN' && attendance.rawCheckIn) {
@@ -86,10 +86,14 @@ const FranchiseDashboard = () => {
     };
   }, [attendance.status, attendance.rawCheckIn, attendance.rawCheckOut]);
 
-  // Fetch Attendance Status on Mount
   const fetchAttendanceStatus = useCallback(async () => {
+    if (!FRANCHISE_ID) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/attendance/status/${FRANCHISE_ID}`);
+      const res = await fetch(`${API_BASE_URL}/api/attendance/status/${FRANCHISE_ID}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const data = await res.json();
       if (res.ok) {
         setAttendance({
@@ -104,21 +108,28 @@ const FranchiseDashboard = () => {
     } catch (err) {
       console.error('Error loading attendance status:', err);
     }
-  }, [FRANCHISE_ID]);
+  }, [FRANCHISE_ID, token]);
 
   useEffect(() => {
     fetchAttendanceStatus();
   }, [fetchAttendanceStatus]);
 
-  // Toggle Check-in / Check-out
   const handleAttendanceAction = async () => {
+    if (!FRANCHISE_ID) {
+      alert('User session error. Please re-login.');
+      return;
+    }
+
     setAttendance((prev) => ({ ...prev, loading: true }));
     const endpoint = attendance.status === 'CHECKED_IN' ? 'check-out' : 'check-in';
 
     try {
       const res = await fetch(`${API_BASE_URL}/api/attendance/${endpoint}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ franchiseId: FRANCHISE_ID })
       });
 
@@ -139,17 +150,15 @@ const FranchiseDashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* Title Header & Attendance Actions */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Franchise Branch Dashboard</h1>
-          <p className="text-xs text-slate-500 mt-1">Real-time daily & monthly performance metrics for North Branch ({FRANCHISE_ID})</p>
+          <p className="text-xs text-slate-500 mt-1">
+            Real-time daily & monthly performance metrics for {user.name || 'Franchise Owner'} ({FRANCHISE_ID})
+          </p>
         </div>
 
-        {/* Check-In / Check-Out & Duration Widget */}
         <div className="flex flex-wrap items-center gap-3 bg-slate-50 border border-slate-200/80 p-2.5 rounded-xl">
-          
-          {/* Active Status Display */}
           <div className="flex items-center gap-3 px-3 py-1 bg-white border border-slate-200 rounded-lg shadow-2xs">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
               <Clock className="w-4 h-4 text-blue-600" />
@@ -164,7 +173,6 @@ const FranchiseDashboard = () => {
               {attendance.status === 'NOT_CHECKED_IN' && <span className="text-slate-500">Not Checked In</span>}
             </div>
 
-            {/* Total / Active Working Hours Counter */}
             {attendance.status !== 'NOT_CHECKED_IN' && (
               <div className="flex items-center gap-1 pl-2 border-l border-slate-200 text-xs font-bold text-emerald-600">
                 <Timer className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
@@ -201,7 +209,6 @@ const FranchiseDashboard = () => {
         </div>
       </div>
 
-      {/* Primary Daily Metrics (Grid 1) */}
       <div>
         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Today's Overview</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -244,7 +251,6 @@ const FranchiseDashboard = () => {
         </div>
       </div>
 
-      {/* Collection Breakdown Metrics (Grid 2) */}
       <div>
         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Payment Modes Breakdown</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -278,7 +284,6 @@ const FranchiseDashboard = () => {
         </div>
       </div>
 
-      {/* Monthly & Lead Performance Metrics (Grid 3) */}
       <div>
         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Performance & Business Growth</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -321,10 +326,7 @@ const FranchiseDashboard = () => {
         </div>
       </div>
 
-      {/* Leads, Conversions & Pending Tasks Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Leads & Conversion Rate Card */}
         <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Leads & Conversions</h2>
@@ -364,7 +366,6 @@ const FranchiseDashboard = () => {
           </div>
         </div>
 
-        {/* Pending Tasks Card */}
         <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-4 lg:col-span-2">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div className="flex items-center gap-2">
@@ -395,10 +396,8 @@ const FranchiseDashboard = () => {
             ))}
           </div>
         </div>
-
       </div>
 
-      {/* Recent Transactions Table */}
       <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden">
         <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
           <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Recent Today Transactions</h2>
@@ -443,7 +442,6 @@ const FranchiseDashboard = () => {
   );
 };
 
-// Reusable MetricCard Component matching Super Admin style
 const MetricCard = ({ title, value, badge, isPositive, sub, icon: Icon, iconBg }) => (
   <div className="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
     <div className="flex items-center justify-between mb-4">

@@ -9,7 +9,8 @@ import {
   Building2, 
   Timer,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Briefcase
 } from 'lucide-react';
 
 const RAW_API_URL = import.meta.env.VITE_APP_BASE_URL || '';
@@ -20,6 +21,9 @@ const FranchiseCheckIn = () => {
   const [loading, setLoading] = useState(true);
   const [searchFranchise, setSearchFranchise] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
+
+  // Retrieve auth token from localStorage
+  const token = localStorage.getItem('token') || '';
 
   // Helper to calculate duration in HH:MM format
   const calculateDuration = (startTime, endTime) => {
@@ -42,11 +46,18 @@ const FranchiseCheckIn = () => {
       if (searchFranchise) query += `franchiseId=${encodeURIComponent(searchFranchise)}&`;
       if (selectedDate) query += `date=${encodeURIComponent(selectedDate)}&`;
 
-      const response = await fetch(query);
+      const response = await fetch(query, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
       const data = await response.json();
 
       if (response.ok && data.success) {
-        setAttendanceData(data.data);
+        setAttendanceData(data.data || []);
       } else {
         console.error('Failed to load data:', data.message);
       }
@@ -55,15 +66,27 @@ const FranchiseCheckIn = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchFranchise, selectedDate]);
+  }, [searchFranchise, selectedDate, token]);
 
   useEffect(() => {
     fetchAllAttendance();
   }, [fetchAllAttendance]);
 
+  // Frontend filter for search query across franchise name, business type, or ID
+  const filteredData = attendanceData.filter((item) => {
+    const searchLower = searchFranchise.toLowerCase().trim();
+    if (!searchLower) return true;
+
+    const franchiseName = item.franchise?.name?.toLowerCase() || '';
+    const businessType = (item.franchise?.businessType || item.franchise?.role || '').toLowerCase();
+    const franchiseId = String(item.franchise_id || '').toLowerCase();
+
+    return franchiseName.includes(searchLower) || businessType.includes(searchLower) || franchiseId.includes(searchLower);
+  });
+
   // Compute summary metrics
-  const activeNowCount = attendanceData.filter((item) => item.status === 'ACTIVE').length;
-  const completedCount = attendanceData.filter((item) => item.status === 'COMPLETED').length;
+  const activeNowCount = filteredData.filter((item) => item.status === 'ACTIVE').length;
+  const completedCount = filteredData.filter((item) => item.status === 'COMPLETED').length;
 
   return (
     <div className="p-6 space-y-6 bg-slate-50 min-h-screen">
@@ -87,7 +110,7 @@ const FranchiseCheckIn = () => {
         <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
           <div>
             <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Records</div>
-            <div className="text-2xl font-bold text-slate-900 mt-1">{attendanceData.length}</div>
+            <div className="text-2xl font-bold text-slate-900 mt-1">{filteredData.length}</div>
           </div>
           <div className="p-3 bg-blue-50 text-blue-600 rounded-xl border border-blue-100">
             <Building2 className="w-5 h-5" />
@@ -118,12 +141,12 @@ const FranchiseCheckIn = () => {
       {/* Filter Toolbar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-          {/* Franchise ID Filter */}
-          <div className="relative w-full sm:w-64">
+          {/* Search Filter for Name, Business Type, or ID */}
+          <div className="relative w-full sm:w-72">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Filter by Franchise ID..."
+              placeholder="Search by Franchise Name or Type..."
               value={searchFranchise}
               onChange={(e) => setSearchFranchise(e.target.value)}
               className="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
@@ -159,7 +182,8 @@ const FranchiseCheckIn = () => {
             <thead className="bg-slate-50 text-slate-500 uppercase text-[10px] tracking-wider border-b border-slate-100">
               <tr>
                 <th className="py-3.5 px-4 font-bold">Log ID</th>
-                <th className="py-3.5 px-4 font-bold">Franchise ID</th>
+                <th className="py-3.5 px-4 font-bold">Franchise Name</th>
+                <th className="py-3.5 px-4 font-bold">Business Type</th>
                 <th className="py-3.5 px-4 font-bold">Date</th>
                 <th className="py-3.5 px-4 font-bold">Check-In Time</th>
                 <th className="py-3.5 px-4 font-bold">Check-Out Time</th>
@@ -170,27 +194,51 @@ const FranchiseCheckIn = () => {
             <tbody className="divide-y divide-slate-100 text-slate-700">
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="py-8 text-center text-slate-400 font-medium">
+                  <td colSpan="8" className="py-8 text-center text-slate-400 font-medium">
                     Loading attendance records...
                   </td>
                 </tr>
-              ) : attendanceData.length === 0 ? (
+              ) : filteredData.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="py-8 text-center text-slate-400 font-medium">
+                  <td colSpan="8" className="py-8 text-center text-slate-400 font-medium">
                     No attendance records found.
                   </td>
                 </tr>
               ) : (
-                attendanceData.map((row) => (
+                filteredData.map((row) => (
                   <tr key={row.id} className="hover:bg-slate-50/80 transition-colors">
+                    {/* Log ID */}
                     <td className="py-3.5 px-4 font-mono font-bold text-slate-400">#{row.id}</td>
-                    <td className="py-3.5 px-4 font-bold text-blue-600 font-mono">{row.franchise_id}</td>
+
+                    {/* Franchise Name */}
+                    <td className="py-3.5 px-4">
+                      <div className="font-bold text-slate-900">
+                        {row.franchise?.name || 'Unknown Branch'}
+                      </div>
+                      <div className="text-[10px] font-mono text-slate-400 mt-0.5">
+                        ID: {row.franchise_id}
+                      </div>
+                    </td>
+
+                    {/* Business Type */}
+                    <td className="py-3.5 px-4">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                        <Briefcase className="w-3 h-3 text-blue-600" />
+                        {row.franchise?.businessType || row.franchise?.role || 'N/A'}
+                      </span>
+                    </td>
+
+                    {/* Date */}
                     <td className="py-3.5 px-4 text-slate-600 font-medium">
                       {new Date(row.check_in_time).toLocaleDateString()}
                     </td>
+
+                    {/* Check-In Time */}
                     <td className="py-3.5 px-4 font-medium text-slate-900">
                       {new Date(row.check_in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </td>
+
+                    {/* Check-Out Time */}
                     <td className="py-3.5 px-4 font-medium text-slate-900">
                       {row.check_out_time ? (
                         new Date(row.check_out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -198,12 +246,16 @@ const FranchiseCheckIn = () => {
                         <span className="text-slate-400 italic">-- : --</span>
                       )}
                     </td>
+
+                    {/* Duration */}
                     <td className="py-3.5 px-4 font-semibold text-slate-700">
                       <div className="flex items-center gap-1.5">
                         <Timer className="w-3.5 h-3.5 text-slate-400" />
                         {calculateDuration(row.check_in_time, row.check_out_time)}
                       </div>
                     </td>
+
+                    {/* Status */}
                     <td className="py-3.5 px-4 text-center">
                       <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                         row.status === 'ACTIVE'

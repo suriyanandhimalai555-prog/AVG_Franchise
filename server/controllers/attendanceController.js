@@ -1,8 +1,13 @@
 import Attendance from '../models/attendanceModel.js';
 import { Op } from 'sequelize';
 
+// Get Attendance Status for single franchise
 export const getAttendanceStatus = async (req, res) => {
-  const { franchiseId } = req.params;
+  const franchiseId = req.params.franchiseId || req.user?.id;
+
+  if (!franchiseId) {
+    return res.status(400).json({ message: 'Franchise ID is required' });
+  }
 
   try {
     const startOfDay = new Date();
@@ -11,14 +16,15 @@ export const getAttendanceStatus = async (req, res) => {
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
 
+    // Fetch the latest record for today
     const record = await Attendance.findOne({
       where: {
-        franchise_id: franchiseId,
+        franchise_id: String(franchiseId),
         check_in_time: {
           [Op.between]: [startOfDay, endOfDay],
         },
       },
-      order: [['id', 'DESC']],
+      order: [['created_at', 'DESC'], ['id', 'DESC']],
     });
 
     if (!record) {
@@ -36,8 +42,9 @@ export const getAttendanceStatus = async (req, res) => {
   }
 };
 
+// Check In
 export const checkIn = async (req, res) => {
-  const { franchiseId } = req.body;
+  const franchiseId = req.body.franchiseId || req.user?.id;
 
   if (!franchiseId) {
     return res.status(400).json({ message: 'Franchise ID is required' });
@@ -45,7 +52,10 @@ export const checkIn = async (req, res) => {
 
   try {
     const activeCheck = await Attendance.findOne({
-      where: { franchise_id: franchiseId, status: 'ACTIVE' },
+      where: { 
+        franchise_id: String(franchiseId), 
+        status: 'ACTIVE' 
+      },
     });
 
     if (activeCheck) {
@@ -53,7 +63,7 @@ export const checkIn = async (req, res) => {
     }
 
     const record = await Attendance.create({
-      franchise_id: franchiseId,
+      franchise_id: String(franchiseId),
       check_in_time: new Date(),
       status: 'ACTIVE',
     });
@@ -68,8 +78,9 @@ export const checkIn = async (req, res) => {
   }
 };
 
+// Check Out
 export const checkOut = async (req, res) => {
-  const { franchiseId } = req.body;
+  const franchiseId = req.body.franchiseId || req.user?.id;
 
   if (!franchiseId) {
     return res.status(400).json({ message: 'Franchise ID is required' });
@@ -77,7 +88,10 @@ export const checkOut = async (req, res) => {
 
   try {
     const activeCheck = await Attendance.findOne({
-      where: { franchise_id: franchiseId, status: 'ACTIVE' },
+      where: { 
+        franchise_id: String(franchiseId), 
+        status: 'ACTIVE' 
+      },
       order: [['id', 'DESC']],
     });
 
@@ -99,16 +113,24 @@ export const checkOut = async (req, res) => {
   }
 };
 
+// Get All Attendance Records (Superadmin & Franchise Owner support)
 export const getAllAttendance = async (req, res) => {
   const { franchiseId, date } = req.query;
 
   try {
     const whereClause = {};
 
-    if (franchiseId) {
-      whereClause.franchise_id = franchiseId;
+    // 1. Specific Query Filter
+    if (franchiseId && franchiseId.trim() !== '') {
+      whereClause.franchise_id = String(franchiseId.trim());
+    } 
+    // 2. Normal Franchise Owner: Restrict to their own ID only.
+    //    If Superadmin/admin: Skip this to fetch ALL franchises.
+    else if (req.user && req.user.role !== 'SUPERADMIN' && req.user.role !== 'admin' && req.user.role !== 'SUPER_ADMIN') {
+      whereClause.franchise_id = String(req.user.id);
     }
 
+    // Optional Date Filter
     if (date) {
       const selectedDate = new Date(date);
       const startOfDay = new Date(selectedDate.setHours(0, 0, 0, 0));
