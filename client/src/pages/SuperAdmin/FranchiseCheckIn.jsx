@@ -22,10 +22,8 @@ const FranchiseCheckIn = () => {
   const [searchFranchise, setSearchFranchise] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
 
-  // Retrieve auth token from localStorage
   const token = localStorage.getItem('token') || '';
 
-  // Helper to calculate duration in HH:MM format
   const calculateDuration = (startTime, endTime) => {
     if (!startTime) return 'N/A';
     const start = new Date(startTime).getTime();
@@ -38,7 +36,6 @@ const FranchiseCheckIn = () => {
     return `${hours}h ${minutes}m`;
   };
 
-  // Fetch all attendance logs from backend
   const fetchAllAttendance = useCallback(async () => {
     setLoading(true);
     try {
@@ -72,7 +69,6 @@ const FranchiseCheckIn = () => {
     fetchAllAttendance();
   }, [fetchAllAttendance]);
 
-  // Frontend filter for search query across franchise name, business type, or ID
   const filteredData = attendanceData.filter((item) => {
     const searchLower = searchFranchise.toLowerCase().trim();
     if (!searchLower) return true;
@@ -80,11 +76,11 @@ const FranchiseCheckIn = () => {
     const franchiseName = item.franchise?.name?.toLowerCase() || '';
     const businessType = (item.franchise?.businessType || item.franchise?.role || '').toLowerCase();
     const franchiseId = String(item.franchise_id || '').toLowerCase();
+    const userCode = (item.franchise?.userCode || '').toLowerCase();
 
-    return franchiseName.includes(searchLower) || businessType.includes(searchLower) || franchiseId.includes(searchLower);
+    return franchiseName.includes(searchLower) || businessType.includes(searchLower) || franchiseId.includes(searchLower) || userCode.includes(searchLower);
   });
 
-  // Compute summary metrics
   const activeNowCount = filteredData.filter((item) => item.status === 'ACTIVE').length;
   const completedCount = filteredData.filter((item) => item.status === 'COMPLETED').length;
 
@@ -141,7 +137,6 @@ const FranchiseCheckIn = () => {
       {/* Filter Toolbar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-          {/* Search Filter for Name, Business Type, or ID */}
           <div className="relative w-full sm:w-72">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
@@ -153,7 +148,6 @@ const FranchiseCheckIn = () => {
             />
           </div>
 
-          {/* Date Filter */}
           <div className="relative w-full sm:w-48">
             <Calendar className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
@@ -207,38 +201,32 @@ const FranchiseCheckIn = () => {
               ) : (
                 filteredData.map((row) => (
                   <tr key={row.id} className="hover:bg-slate-50/80 transition-colors">
-                    {/* Log ID */}
                     <td className="py-3.5 px-4 font-mono font-bold text-slate-400">#{row.id}</td>
 
-                    {/* Franchise Name */}
                     <td className="py-3.5 px-4">
                       <div className="font-bold text-slate-900">
                         {row.franchise?.name || 'Unknown Branch'}
                       </div>
                       <div className="text-[10px] font-mono text-slate-400 mt-0.5">
-                        ID: {row.franchise_id}
+                        Code: {row.franchise?.userCode || row.franchise_id}
                       </div>
                     </td>
 
-                    {/* Business Type */}
                     <td className="py-3.5 px-4">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200 uppercase">
                         <Briefcase className="w-3 h-3 text-blue-600" />
                         {row.franchise?.businessType || row.franchise?.role || 'N/A'}
                       </span>
                     </td>
 
-                    {/* Date */}
                     <td className="py-3.5 px-4 text-slate-600 font-medium">
                       {new Date(row.check_in_time).toLocaleDateString()}
                     </td>
 
-                    {/* Check-In Time */}
                     <td className="py-3.5 px-4 font-medium text-slate-900">
                       {new Date(row.check_in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </td>
 
-                    {/* Check-Out Time */}
                     <td className="py-3.5 px-4 font-medium text-slate-900">
                       {row.check_out_time ? (
                         new Date(row.check_out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -247,7 +235,6 @@ const FranchiseCheckIn = () => {
                       )}
                     </td>
 
-                    {/* Duration */}
                     <td className="py-3.5 px-4 font-semibold text-slate-700">
                       <div className="flex items-center gap-1.5">
                         <Timer className="w-3.5 h-3.5 text-slate-400" />
@@ -255,7 +242,6 @@ const FranchiseCheckIn = () => {
                       </div>
                     </td>
 
-                    {/* Status */}
                     <td className="py-3.5 px-4 text-center">
                       <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                         row.status === 'ACTIVE'

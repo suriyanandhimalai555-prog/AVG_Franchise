@@ -1,5 +1,6 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/db.js';
+import User from './User.js';
 
 const Attendance = sequelize.define(
   'Attendance',
@@ -10,8 +11,12 @@ const Attendance = sequelize.define(
       autoIncrement: true,
     },
     franchise_id: {
-      type: DataTypes.STRING(50),
+      type: DataTypes.UUID, // Changed to match User.id type (UUID)
       allowNull: false,
+      references: {
+        model: User,
+        key: 'id',
+      },
     },
     check_in_time: {
       type: DataTypes.DATE,
@@ -39,5 +44,16 @@ const Attendance = sequelize.define(
     ],
   }
 );
+
+// Define Relationships
+Attendance.belongsTo(User, {
+  foreignKey: 'franchise_id',
+  as: 'franchise',
+});
+
+User.hasMany(Attendance, {
+  foreignKey: 'franchise_id',
+  as: 'attendances',
+});
 
 export default Attendance;

@@ -1,4 +1,5 @@
 import Attendance from '../models/attendanceModel.js';
+import User from '../models/User.js';
 import { Op } from 'sequelize';
 
 // Get Attendance Status for single franchise
@@ -16,14 +17,20 @@ export const getAttendanceStatus = async (req, res) => {
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
 
-    // Fetch the latest record for today
     const record = await Attendance.findOne({
       where: {
-        franchise_id: String(franchiseId),
+        franchise_id: franchiseId,
         check_in_time: {
           [Op.between]: [startOfDay, endOfDay],
         },
       },
+      include: [
+        {
+          model: User,
+          as: 'franchise',
+          attributes: ['id', 'name', 'email', 'mobile', 'businessType', 'userCode', 'role'],
+        },
+      ],
       order: [['created_at', 'DESC'], ['id', 'DESC']],
     });
 
@@ -53,7 +60,7 @@ export const checkIn = async (req, res) => {
   try {
     const activeCheck = await Attendance.findOne({
       where: { 
-        franchise_id: String(franchiseId), 
+        franchise_id: franchiseId, 
         status: 'ACTIVE' 
       },
     });
@@ -63,7 +70,7 @@ export const checkIn = async (req, res) => {
     }
 
     const record = await Attendance.create({
-      franchise_id: String(franchiseId),
+      franchise_id: franchiseId,
       check_in_time: new Date(),
       status: 'ACTIVE',
     });
@@ -89,7 +96,7 @@ export const checkOut = async (req, res) => {
   try {
     const activeCheck = await Attendance.findOne({
       where: { 
-        franchise_id: String(franchiseId), 
+        franchise_id: franchiseId, 
         status: 'ACTIVE' 
       },
       order: [['id', 'DESC']],
@@ -122,12 +129,11 @@ export const getAllAttendance = async (req, res) => {
 
     // 1. Specific Query Filter
     if (franchiseId && franchiseId.trim() !== '') {
-      whereClause.franchise_id = String(franchiseId.trim());
+      whereClause.franchise_id = franchiseId.trim();
     } 
-    // 2. Normal Franchise Owner: Restrict to their own ID only.
-    //    If Superadmin/admin: Skip this to fetch ALL franchises.
-    else if (req.user && req.user.role !== 'SUPERADMIN' && req.user.role !== 'admin' && req.user.role !== 'SUPER_ADMIN') {
-      whereClause.franchise_id = String(req.user.id);
+    // 2. Normal Franchise Owner: Restrict to their own ID only
+    else if (req.user && !['SUPERADMIN', 'admin', 'SUPER_ADMIN'].includes(req.user.role)) {
+      whereClause.franchise_id = req.user.id;
     }
 
     // Optional Date Filter
@@ -143,6 +149,13 @@ export const getAllAttendance = async (req, res) => {
 
     const records = await Attendance.findAll({
       where: whereClause,
+      include: [
+        {
+          model: User,
+          as: 'franchise',
+          attributes: ['id', 'name', 'email', 'mobile', 'businessType', 'userCode', 'role'],
+        },
+      ],
       order: [['check_in_time', 'DESC']],
     });
 
