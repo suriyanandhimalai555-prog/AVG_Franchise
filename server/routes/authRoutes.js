@@ -9,7 +9,10 @@ import {
   getUsersByRole,
   getAllUsers,
   getTerritoryOverview, 
-  getStockholdersByState
+  getStockholdersByState,
+  getPendingApprovals,
+  approveFranchise,
+  rejectFranchise
 } from '../controllers/authController.js';
 import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
 
@@ -34,6 +37,10 @@ router.post(
   authorizeRoles('SUPER_ADMIN', 'ADMIN'),
   createUserByAdmin
 );
+
+router.get('/pending-approvals', protect, authorizeRoles('SUPER_ADMIN', 'ADMIN'), getPendingApprovals);
+router.put('/approve-franchise/:userId', protect, authorizeRoles('SUPER_ADMIN', 'ADMIN'), approveFranchise);
+router.put('/reject-franchise/:userId', protect, authorizeRoles('SUPER_ADMIN', 'ADMIN'), rejectFranchise);
 
 // Get role metrics and user listings
 router.get('/role-counts', protect, getRoleCounts);

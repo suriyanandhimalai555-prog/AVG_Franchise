@@ -16,7 +16,7 @@ const navItems = [
   { label: 'Territory Mapping', path: '/super-admin/territories', icon: MapPin },
   // { label: 'Commissions', path: '/super-admin/commissions', icon: Percent },
   // { label: 'Target Allocation', path: '/super-admin/targets', icon: Target },
-  // { label: 'Approvals Queue', path: '/super-admin/approvals', icon: CheckSquare },
+  { label: 'Approvals Queue', path: '/super-admin/approvals', icon: CheckSquare },
   // { label: 'Audit Logs', path: '/super-admin/audit', icon: History },
   { label: 'Ticket Management', path: '/super-admin/tickets', icon: BarChart3 },
 ];

@@ -1,7 +1,7 @@
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
 import { Sequelize, Op } from 'sequelize';
-import { sendCredentialsEmail } from '../utils/sendEmail.js';
+import { sendCredentialsEmail, sendApprovalEmail, sendRejectionEmail } from '../utils/sendEmail.js';
 
 const generateToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: '7d' });
@@ -151,21 +151,38 @@ export const loginUser = async (req, res) => {
       },
     });
 
-    if (user && (await user.matchPassword(password))) {
-      return res.json({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        mobile: user.mobile,
-        role: user.role,
-        userCode: user.userCode,
-        isPasswordResetRequired: user.isPasswordResetRequired,
-        redirectTo: ROLE_REDIRECT_MAP[user.role],
-        token: generateToken(user.id, user.role),
-      });
-    } else {
+    if (!user || !(await user.matchPassword(password))) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
+
+    // Check account status
+    if (user.status === 'PENDING') {
+      return res.status(403).json({
+        message: 'Your franchise application is pending approval. You will receive an email once approved.'
+      });
+    }
+
+    if (user.status === 'REJECTED') {
+      return res.status(403).json({
+        message: 'Your franchise registration request was rejected. Please contact support.'
+      });
+    }
+
+    if (!user.isActive) {
+      return res.status(403).json({ message: 'Your account has been deactivated. Contact administration.' });
+    }
+
+    return res.json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      mobile: user.mobile,
+      role: user.role,
+      userCode: user.userCode,
+      isPasswordResetRequired: user.isPasswordResetRequired,
+      redirectTo: ROLE_REDIRECT_MAP[user.role],
+      token: generateToken(user.id, user.role),
+    });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -203,9 +220,7 @@ export const registerFranchise = async (req, res) => {
 
   try {
     const existingUser = await User.findOne({
-      where: {
-        [Op.or]: [{ email }, { mobile }]
-      }
+      where: { [Op.or]: [{ email }, { mobile }] }
     });
 
     if (existingUser) {
@@ -231,14 +246,16 @@ export const registerFranchise = async (req, res) => {
       password: userPassword,
       role: 'FRANCHISE',
       userCode,
+      status: 'PENDING', // Locked until approval
+      isActive: true,
       isPasswordResetRequired: false,
     });
 
     return res.status(201).json({
-      message: 'Franchise application submitted successfully',
+      success: true,
+      message: 'Franchise application submitted! Please wait for Super Admin approval before logging in.',
       userCode: newFranchise.userCode,
-      redirectTo: ROLE_REDIRECT_MAP['FRANCHISE'],
-      token: generateToken(newFranchise.id, newFranchise.role),
+      redirectTo: '/login'
     });
   } catch (error) {
     console.error('Error in registerFranchise:', error);
@@ -384,5 +401,69 @@ export const getStockholdersByState = async (req, res) => {
   } catch (error) {
     console.error('Error fetching stockholders:', error);
     return res.status(500).json({ message: 'Internal server error.' });
+  }
+};
+
+// 3. GET PENDING APPROVALS
+export const getPendingApprovals = async (req, res) => {
+  try {
+    const pendingUsers = await User.findAll({
+      where: { status: 'PENDING' },
+      attributes: ['id', 'userCode', 'name', 'email', 'mobile', 'businessType', 'state', 'district', 'createdAt'],
+      order: [['createdAt', 'DESC']],
+    });
+    return res.json(pendingUsers);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+// 4. APPROVE FRANCHISE
+export const approveFranchise = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.status = 'APPROVED';
+    user.approvedAt = new Date();
+    await user.save();
+
+    // Trigger Email Async
+    sendApprovalEmail(user.email, user.name, user.userCode).catch(err => 
+      console.error('Failed to send approval email:', err.message)
+    );
+
+    return res.json({ message: `Franchise ${user.name} approved successfully.` });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+// 5. REJECT FRANCHISE
+export const rejectFranchise = async (req, res) => {
+  const { userId } = req.params;
+  const { reason } = req.body;
+
+  try {
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.status = 'REJECTED';
+    await user.save();
+
+    // Trigger Email Async
+    sendRejectionEmail(user.email, user.name, reason).catch(err => 
+      console.error('Failed to send rejection email:', err.message)
+    );
+
+    return res.json({ message: `Franchise ${user.name} application rejected.` });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 };

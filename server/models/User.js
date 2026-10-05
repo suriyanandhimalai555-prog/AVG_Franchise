@@ -46,7 +46,7 @@ const User = sequelize.define('User', {
       'STATE_HEAD',
       'SALES_MANAGER',
       'FRANCHISE',
-      'STOCKHOLDER' // Added STOCKHOLDER
+      'STOCKHOLDER'
     ),
     allowNull: false,
     defaultValue: 'FRANCHISE',
@@ -57,13 +57,19 @@ const User = sequelize.define('User', {
   },
   businessType: { type: DataTypes.STRING, allowNull: true },
   street: { type: DataTypes.STRING, allowNull: true },
-  area: { type: DataTypes.STRING, allowNull: true },
-  state: { type: DataTypes.STRING, allowNull: true },
-  district: { type: DataTypes.STRING, allowNull: true },
   pincode: { type: DataTypes.STRING, allowNull: true },
   isActive: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
+  },
+  // Added Status and Approval fields
+  status: {
+    type: DataTypes.ENUM('PENDING', 'APPROVED', 'REJECTED'),
+    defaultValue: 'APPROVED', // Default APPROVED for internal staff; set to PENDING for FRANCHISE in controller
+  },
+  approvedAt: {
+    type: DataTypes.DATE,
+    allowNull: true,
   },
 }, {
   timestamps: true,
