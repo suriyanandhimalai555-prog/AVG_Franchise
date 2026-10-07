@@ -1,5 +1,5 @@
 // src/pages/Stockholder/StockholderSidebar.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   X, 
@@ -9,13 +9,28 @@ import {
   FileText, 
   ShieldCheck, 
   CreditCard,
-  LogOut
+  LogOut,
+  MapPin
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Logo from '../../assets/logo.png';
 
-const StockholderSidebar = ({ isOpen, onClose }) => {
+const StockholderSidebar = ({ isOpen, onClose, currentUser }) => {
   const navigate = useNavigate();
+  const [user, setUser] = useState(currentUser || {});
+
+  useEffect(() => {
+    if (currentUser && Object.keys(currentUser).length > 0) {
+      setUser(currentUser);
+    } else {
+      try {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error('Error loading user in sidebar:', error);
+      }
+    }
+  }, [currentUser]);
 
   const navItems = [
     { label: 'Dashboard', path: '/stockholder/dashboard', icon: LayoutDashboard },
@@ -25,7 +40,6 @@ const StockholderSidebar = ({ isOpen, onClose }) => {
     { label: 'Transactions', path: '/stockholder/transactions', icon: CreditCard },
   ];
 
-  // Logout Handler
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -33,6 +47,24 @@ const StockholderSidebar = ({ isOpen, onClose }) => {
     toast.success('Logged out successfully');
     navigate('/login', { replace: true });
   };
+
+  const getUserInitials = (name) => {
+    if (!name) return 'SH';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
+
+  // Combine Area, District, and State for Sidebar
+  const locationParts = [
+    user.area,
+    user.district || user.city || user.location,
+    user.state || user.province,
+  ].filter(Boolean);
+
+  const locationString = locationParts.join(', ');
 
   return (
     <>
@@ -101,11 +133,30 @@ const StockholderSidebar = ({ isOpen, onClose }) => {
           </nav>
         </div>
 
-        {/* Sidebar Footer with Audited Badge and Logout Button */}
+        {/* Sidebar Footer with Area, District, State */}
         <div className="p-4 border-t border-slate-800 space-y-3">
-          <div className="p-3 bg-slate-800/50 rounded-2xl border border-slate-800 flex items-center gap-2.5 text-[11px] text-slate-400">
-            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>Audited Portfolio Data</span>
+          <div className="p-3 bg-slate-800/50 rounded-2xl border border-slate-800/80 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 flex items-center justify-center font-bold text-xs shrink-0">
+              {getUserInitials(user.name)}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-white truncate">{user.name || 'Stockholder'}</p>
+              <div className="flex items-center gap-1 text-[10px] text-slate-400 truncate mt-0.5">
+                {locationString ? (
+                  <>
+                    <MapPin className="w-3 h-3 text-amber-400 shrink-0" />
+                    <span className="truncate" title={locationString}>{locationString}</span>
+                  </>
+                ) : (
+                  <span className="truncate">{user.email || 'Verified Shareholder'}</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="px-3 py-1.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20 flex items-center gap-2 text-[10px] font-medium text-emerald-400">
+            <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+            <span>Audited Portfolio Active</span>
           </div>
 
           <button

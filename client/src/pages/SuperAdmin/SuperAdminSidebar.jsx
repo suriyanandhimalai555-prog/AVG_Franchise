@@ -2,9 +2,9 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, ShieldCheck, Users, Briefcase, MapPin, 
-  Percent, Target, CheckSquare, History, LogOut, X, ChevronRight, BarChart3
+  CheckSquare, LogOut, X, ChevronRight, BarChart3, User
 } from 'lucide-react';
-import Logo from '../../assets/logo.png'
+import Logo from '../../assets/logo.png';
 
 const navItems = [
   { label: 'Dashboard', path: '/super-admin/dashboard', icon: LayoutDashboard },
@@ -14,14 +14,11 @@ const navItems = [
   { label: 'User Directory', path: '/super-admin/users', icon: Users },
   { label: 'Business Verticals', path: '/super-admin/businesses', icon: Briefcase },
   { label: 'Territory Mapping', path: '/super-admin/territories', icon: MapPin },
-  // { label: 'Commissions', path: '/super-admin/commissions', icon: Percent },
-  // { label: 'Target Allocation', path: '/super-admin/targets', icon: Target },
   { label: 'Approvals Queue', path: '/super-admin/approvals', icon: CheckSquare },
-  // { label: 'Audit Logs', path: '/super-admin/audit', icon: History },
   { label: 'Ticket Management', path: '/super-admin/tickets', icon: BarChart3 },
 ];
 
-const SuperAdminSidebar = ({ isOpen, onClose }) => {
+const SuperAdminSidebar = ({ isOpen, onClose, user, onLogout }) => {
   return (
     <>
       {/* Mobile Backdrop */}
@@ -40,10 +37,10 @@ const SuperAdminSidebar = ({ isOpen, onClose }) => {
         {/* Brand Logo */}
         <div className="h-16 px-6 flex items-center justify-between border-b border-slate-800/80 mt-2">
           <div className="flex items-center gap-3">
-            <img src={Logo} alt="AVG Logo" className="w-9 h-9 bg-white border border-slate-300 rounded-lg" />
+            <img src={Logo} alt="AVG Logo" className="w-9 h-9 bg-white border border-slate-300 rounded-lg object-contain p-0.5" />
             <div>
               <span className="text-sm font-bold text-white tracking-tight block leading-none">AVG Franchise</span>
-              <span className="text-[10px] font-medium text-slate-500 mt-1 block">Super Admin Panel</span>
+              <span className="text-[10px] font-medium text-slate-500 mt-1 block">Super Admin Dashboard</span>
             </div>
           </div>
           <button onClick={onClose} className="lg:hidden p-1.5 text-slate-400 hover:text-white rounded-lg">
@@ -85,16 +82,28 @@ const SuperAdminSidebar = ({ isOpen, onClose }) => {
         </nav>
 
         {/* User Card / Sign Out */}
-        <div className="p-3 border-t border-slate-800/80">
-          <NavLink
-            to="/login"
-            className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium text-rose-400 hover:bg-rose-500/10 transition-colors"
+        <div className="p-3 border-t border-slate-800/80 space-y-2">
+          {/* User Profile Info Card */}
+          <div className="flex items-center gap-3 px-3.5 py-2.5 bg-slate-800/40 rounded-xl border border-slate-800/60">
+            <div className="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-400 flex items-center justify-center font-bold text-xs shrink-0">
+              {user?.name ? user.name.slice(0, 2).toUpperCase() : <User className="w-4 h-4" />}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-white truncate">{user?.name || 'Super Admin'}</p>
+              <p className="text-[10px] text-slate-400 truncate">{user?.email || 'admin@avg.com'}</p>
+            </div>
+          </div>
+
+          {/* Logout Button */}
+          <button
+            onClick={onLogout}
+            className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium text-rose-400 hover:bg-rose-500/10 transition-colors"
           >
             <div className="flex items-center gap-3">
               <LogOut className="w-4 h-4" />
               <span>Sign Out</span>
             </div>
-          </NavLink>
+          </button>
         </div>
       </aside>
     </>

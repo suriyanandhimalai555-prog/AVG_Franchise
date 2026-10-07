@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
   Building2, Map, Users, BarChart3, Clock, 
-  Store, LogOut, X, ChevronRight, Layers
+  LogOut, X, ChevronRight, Layers, User
 } from 'lucide-react';
 import Logo from '../../assets/logo.png';
 
@@ -16,7 +16,17 @@ const stateHeadNavItems = [
   { label: 'Ticket Management', path: '/state-head/tickets', icon: BarChart3 },
 ];
 
-const StateHeadSidebar = ({ isOpen, onClose }) => {
+const StateHeadSidebar = ({ isOpen, onClose, user, onLogout }) => {
+  // Helper to extract user initials for avatar fallback
+  const getUserInitials = (name) => {
+    if (!name) return 'SH';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
+
   return (
     <>
       {/* Mobile Backdrop */}
@@ -32,13 +42,13 @@ const StateHeadSidebar = ({ isOpen, onClose }) => {
         fixed top-0 left-0 z-50 h-screen w-64 bg-slate-900 text-slate-400 flex flex-col transition-transform duration-300 ease-out
         lg:static lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
-        {/* Brand Logo */}
+        {/* Brand Logo Header */}
         <div className="h-16 px-6 flex items-center justify-between border-b border-slate-800/80 mt-2">
           <div className="flex items-center gap-3">
             <img src={Logo} alt="AVG Logo" className="w-9 h-9 bg-white border border-slate-300 rounded-lg p-0.5 object-contain" />
             <div>
               <span className="text-sm font-bold text-white tracking-tight block leading-none">AVG Franchise</span>
-              <span className="text-[10px] font-medium text-slate-500 mt-1 block">State Head Panel</span>
+              <span className="text-[10px] font-medium text-slate-500 mt-1 block">State Head Dashboard</span>
             </div>
           </div>
           <button onClick={onClose} className="lg:hidden p-1.5 text-slate-400 hover:text-white rounded-lg">
@@ -79,17 +89,27 @@ const StateHeadSidebar = ({ isOpen, onClose }) => {
           })}
         </nav>
 
-        {/* Sign Out */}
-        <div className="p-3 border-t border-slate-800/80">
-          <NavLink
-            to="/login"
-            className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium text-rose-400 hover:bg-rose-500/10 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <LogOut className="w-4 h-4" />
-              <span>Sign Out Session</span>
+        {/* User Info & Sign Out Footer */}
+        <div className="p-3 border-t border-slate-800/80 space-y-2">
+          {/* User Profile Badge */}
+          <div className="flex items-center gap-3 px-3.5 py-2.5 bg-slate-800/40 rounded-xl border border-slate-800/60">
+            <div className="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-400 flex items-center justify-center font-bold text-xs shrink-0">
+              {user?.name ? getUserInitials(user.name) : <User className="w-4 h-4" />}
             </div>
-          </NavLink>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-white truncate">{user?.name || 'State Head'}</p>
+              <p className="text-[10px] text-slate-400 truncate">{user?.email || 'statehead@avg.com'}</p>
+            </div>
+          </div>
+
+          {/* Sign Out Button */}
+          <button
+            onClick={onLogout}
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-rose-400 hover:bg-rose-500/10 transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Sign Out Session</span>
+          </button>
         </div>
       </aside>
     </>
