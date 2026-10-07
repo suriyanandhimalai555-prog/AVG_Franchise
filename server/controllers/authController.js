@@ -183,6 +183,7 @@ export const loginUser = async (req, res) => {
       district: user.district,
       state: user.state,
       territory: user.territory,
+      pincode: user.pincode,
       isPasswordResetRequired: user.isPasswordResetRequired,
       redirectTo: ROLE_REDIRECT_MAP[user.role],
       token: generateToken(user.id, user.role),
@@ -487,6 +488,7 @@ export const getMe = async (req, res) => {
         'state',
         'district',
         'area',
+        'pincode',
         'isActive',
       ],
     });
