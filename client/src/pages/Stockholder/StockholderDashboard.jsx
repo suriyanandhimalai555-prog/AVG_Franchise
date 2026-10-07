@@ -18,6 +18,7 @@ import toast from 'react-hot-toast';
 
 const StockholderDashboard = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const token = localStorage.getItem('token') || user.token;
   const baseUrl = import.meta.env.VITE_APP_BASE_URL || 'http://localhost:5000';
 
   const [loading, setLoading] = useState(true);
@@ -28,19 +29,37 @@ const StockholderDashboard = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
+      const authHeaders = {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      };
+
       const [stocksRes, requestsRes] = await Promise.all([
-        fetch(`${baseUrl}/api/stocks`),
-        fetch(`${baseUrl}/api/stock-requests`),
+        fetch(`${baseUrl}/api/stocks`, { headers: authHeaders }),
+        fetch(`${baseUrl}/api/stock-requests`, { headers: authHeaders }),
       ]);
 
       const stocksResult = await stocksRes.json();
       const requestsResult = await requestsRes.json();
 
-      if (stocksRes.ok && stocksResult.success) {
-        setStocks(stocksResult.data || []);
+      // Handle stocks payload (array or object containing data array)
+      if (stocksRes.ok) {
+        const stocksData = Array.isArray(stocksResult) 
+          ? stocksResult 
+          : stocksResult.data || stocksResult.stocks || [];
+        setStocks(stocksData);
+      } else {
+        console.error('Stocks fetch failed:', stocksResult);
       }
-      if (requestsRes.ok && requestsResult.success) {
-        setRequests(requestsResult.data || []);
+
+      // Handle stock requests payload (array or object containing data array)
+      if (requestsRes.ok) {
+        const requestsData = Array.isArray(requestsResult) 
+          ? requestsResult 
+          : requestsResult.data || requestsResult.requests || [];
+        setRequests(requestsData);
+      } else {
+        console.error('Stock requests fetch failed:', requestsResult);
       }
     } catch (error) {
       console.error('Failed to load dashboard telemetry:', error);
@@ -54,15 +73,22 @@ const StockholderDashboard = () => {
     fetchDashboardData();
   }, [baseUrl]);
 
-  // Dynamic Telemetry Computations
+  // Dynamic Telemetry Computations with fallback fields
   const totalStockItems = stocks.length;
-  const totalUnitCount = stocks.reduce((acc, item) => acc + (parseInt(item.count, 10) || 0), 0);
+  const totalUnitCount = stocks.reduce((acc, item) => {
+    const qty = parseInt(item.count || item.quantity || item.total_count, 10) || 0;
+    return acc + qty;
+  }, 0);
+
   const totalInventoryWeight = stocks.reduce((acc, item) => {
-    const weight = parseFloat(item.single_stock_weight) || 0;
-    const count = parseInt(item.count, 10) || 0;
+    const weight = parseFloat(item.single_stock_weight || item.weight) || 0;
+    const count = parseInt(item.count || item.quantity || item.total_count, 10) || 0;
     return acc + weight * count;
   }, 0);
-  const pendingRequestsCount = requests.filter((r) => r.status === 'PENDING').length;
+
+  const pendingRequestsCount = requests.filter(
+    (r) => (r.status || '').toUpperCase() === 'PENDING'
+  ).length;
 
   const financialMetrics = [
     {
@@ -190,35 +216,43 @@ const StockholderDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-xs font-medium text-slate-700">
-                  {requests.slice(0, 5).map((req) => (
-                    <tr key={req.id} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="py-3.5 px-4 font-bold text-slate-800">{req.franchise_name}</td>
-                      <td className="py-3.5 px-4 text-slate-600">{req.stock?.stock_name || 'N/A'}</td>
-                      <td className="py-3.5 px-4 font-mono font-bold text-slate-900">
-                        {req.requested_count} units
-                      </td>
-                      <td className="py-3.5 px-4">
-                        {req.status === 'PENDING' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-200">
-                            <Clock className="w-3 h-3 animate-pulse" /> Pending
-                          </span>
-                        )}
-                        {req.status === 'APPROVED' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">
-                            <CheckCircle2 className="w-3 h-3" /> Approved
-                          </span>
-                        )}
-                        {req.status === 'REJECTED' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-200">
-                            <XCircle className="w-3 h-3" /> Rejected
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-400 text-[11px]">
-                        {new Date(req.created_at).toLocaleDateString()}
-                      </td>
-                    </tr>
-                  ))}
+                  {requests.slice(0, 5).map((req, idx) => {
+                    const franchiseName = req.franchise_name || req.user?.name || req.franchise?.name || 'Franchise Unit';
+                    const stockName = req.stock?.stock_name || req.stock_name || req.stock?.name || 'N/A';
+                    const quantity = req.requested_count || req.quantity || req.count || 0;
+                    const reqStatus = (req.status || 'PENDING').toUpperCase();
+                    const createdAt = req.created_at || req.createdAt;
+
+                    return (
+                      <tr key={req.id || idx} className="hover:bg-slate-50/60 transition-colors">
+                        <td className="py-3.5 px-4 font-bold text-slate-800">{franchiseName}</td>
+                        <td className="py-3.5 px-4 text-slate-600">{stockName}</td>
+                        <td className="py-3.5 px-4 font-mono font-bold text-slate-900">
+                          {quantity} units
+                        </td>
+                        <td className="py-3.5 px-4">
+                          {reqStatus === 'PENDING' && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-200">
+                              <Clock className="w-3 h-3 animate-pulse" /> Pending
+                            </span>
+                          )}
+                          {reqStatus === 'APPROVED' && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">
+                              <CheckCircle2 className="w-3 h-3" /> Approved
+                            </span>
+                          )}
+                          {reqStatus === 'REJECTED' && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-200">
+                              <XCircle className="w-3 h-3" /> Rejected
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4 text-slate-400 text-[11px]">
+                          {createdAt ? new Date(createdAt).toLocaleDateString() : 'N/A'}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
