@@ -1,19 +1,20 @@
-// src/pages/Stockholder/StockholderSidebar.jsx
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { 
-  X, 
-  LayoutDashboard, 
-  PieChart, 
-  TrendingUp, 
-  FileText, 
-  ShieldCheck, 
+import {
+  X,
+  LayoutDashboard,
+  PieChart,
+  TrendingUp,
+  FileText,
+  ShieldCheck,
   CreditCard,
   LogOut,
   MapPin
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Logo from '../../assets/logo.png';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 const StockholderSidebar = ({ isOpen, onClose, currentUser }) => {
   const navigate = useNavigate();
@@ -23,12 +24,28 @@ const StockholderSidebar = ({ isOpen, onClose, currentUser }) => {
     if (currentUser && Object.keys(currentUser).length > 0) {
       setUser(currentUser);
     } else {
-      try {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Error loading user in sidebar:', error);
-      }
+      const fetchUserData = async () => {
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) return;
+
+          const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            setUser(data);
+          }
+        } catch (err) {
+          console.error('Failed to load user profile in sidebar:', err);
+        }
+      };
+
+      fetchUserData();
     }
   }, [currentUser]);
 
@@ -70,8 +87,8 @@ const StockholderSidebar = ({ isOpen, onClose, currentUser }) => {
     <>
       {/* Mobile Backdrop */}
       {isOpen && (
-        <div 
-          onClick={onClose} 
+        <div
+          onClick={onClose}
           className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 lg:hidden transition-opacity"
         />
       )}
@@ -97,7 +114,7 @@ const StockholderSidebar = ({ isOpen, onClose, currentUser }) => {
               </div>
             </div>
 
-            <button 
+            <button
               onClick={onClose}
               className="lg:hidden p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
             >
@@ -120,8 +137,8 @@ const StockholderSidebar = ({ isOpen, onClose, currentUser }) => {
                   onClick={onClose}
                   className={({ isActive }) => `
                     flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150
-                    ${isActive 
-                      ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-sm' 
+                    ${isActive
+                      ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-sm'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'}
                   `}
                 >
@@ -140,17 +157,27 @@ const StockholderSidebar = ({ isOpen, onClose, currentUser }) => {
               {getUserInitials(user.name)}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold text-white truncate">{user.name || 'Stockholder'}</p>
-              <div className="flex items-center gap-1 text-[10px] text-slate-400 truncate mt-0.5">
-                {locationString ? (
-                  <>
-                    <MapPin className="w-3 h-3 text-amber-400 shrink-0" />
-                    <span className="truncate" title={locationString}>{locationString}</span>
-                  </>
-                ) : (
-                  <span className="truncate">{user.email || 'Verified Shareholder'}</span>
-                )}
-              </div>
+              <p className="text-xs font-bold text-white truncate leading-snug">
+                {user.name || 'Stockholder'}
+              </p>
+
+              {locationString ? (
+                <div className="mt-1 space-y-0.5">
+                  <div className="flex items-center gap-1 text-[11px] font-medium text-amber-400">
+                    <MapPin className="w-3 h-3 shrink-0" />
+                    <span className="truncate">{user.area || user.district}</span>
+                  </div>
+                  {(user.state || user.district) && (
+                    <p className="text-[10px] text-slate-400 truncate pl-4">
+                      {[user.district !== user.area ? user.district : null, user.state].filter(Boolean).join(', ')}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                  {user.email || 'Verified Shareholder'}
+                </p>
+              )}
             </div>
           </div>
 

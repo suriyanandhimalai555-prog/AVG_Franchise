@@ -179,6 +179,10 @@ export const loginUser = async (req, res) => {
       mobile: user.mobile,
       role: user.role,
       userCode: user.userCode,
+      area: user.area,
+      district: user.district,
+      state: user.state,
+      territory: user.territory,
       isPasswordResetRequired: user.isPasswordResetRequired,
       redirectTo: ROLE_REDIRECT_MAP[user.role],
       token: generateToken(user.id, user.role),
@@ -404,7 +408,7 @@ export const getStockholdersByState = async (req, res) => {
   }
 };
 
-// 3. GET PENDING APPROVALS
+// GET PENDING APPROVALS
 export const getPendingApprovals = async (req, res) => {
   try {
     const pendingUsers = await User.findAll({
@@ -418,7 +422,7 @@ export const getPendingApprovals = async (req, res) => {
   }
 };
 
-// 4. APPROVE FRANCHISE
+// APPROVE FRANCHISE
 export const approveFranchise = async (req, res) => {
   const { userId } = req.params;
 
@@ -443,7 +447,7 @@ export const approveFranchise = async (req, res) => {
   }
 };
 
-// 5. REJECT FRANCHISE
+//REJECT FRANCHISE
 export const rejectFranchise = async (req, res) => {
   const { userId } = req.params;
   const { reason } = req.body;
@@ -465,5 +469,35 @@ export const rejectFranchise = async (req, res) => {
     return res.json({ message: `Franchise ${user.name} application rejected.` });
   } catch (error) {
     return res.status(500).json({ message: error.message });
+  }
+};
+
+// GET /api/auth/me
+export const getMe = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id, {
+      attributes: [
+        'id',
+        'userCode',
+        'name',
+        'email',
+        'mobile',
+        'role',
+        'territory',
+        'state',
+        'district',
+        'area',
+        'isActive',
+      ],
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    return res.status(200).json(user);
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    return res.status(500).json({ message: 'Failed to fetch user details' });
   }
 };

@@ -12,7 +12,8 @@ import {
   getStockholdersByState,
   getPendingApprovals,
   approveFranchise,
-  rejectFranchise
+  rejectFranchise,
+  getMe
 } from '../controllers/authController.js';
 import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
 
@@ -49,5 +50,7 @@ router.get('/all-users', protect, getAllUsers);
 
 router.get('/territory-overview', protect, getTerritoryOverview);
 router.get('/stockholders-by-state', protect, getStockholdersByState);
+
+router.get('/me', protect, getMe);
 
 export default router;
