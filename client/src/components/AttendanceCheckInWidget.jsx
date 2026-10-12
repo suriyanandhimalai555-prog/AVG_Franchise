@@ -159,7 +159,7 @@ const AttendanceCheckInWidget = () => {
 
   return (
     <div className="flex flex-wrap items-center gap-3 bg-slate-50 border border-slate-200/80 p-2.5 rounded-xl">
-      <div className="flex items-center gap-3 px-3 py-1 bg-white border border-slate-200 rounded-lg shadow-2xs">
+      <div className="flex items-center gap-3 px-3 py-1.5 bg-white border border-slate-200 rounded-lg shadow-2xs">
         <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
           <Clock className="w-4 h-4 text-blue-600" />
           {attendance.status === 'CHECKED_IN' && (
@@ -170,7 +170,7 @@ const AttendanceCheckInWidget = () => {
               Out at <strong className="text-slate-900">{attendance.checkOutTime}</strong> (Last Shift)
             </span>
           )}
-          {attendance.status === 'NOT_CHECKED_IN' && <span className="text-slate-500">Not Checked In</span>}
+          {attendance.status === 'NOT_CHECKED_IN' && <span className="text-slate-500">Not Checked In Today</span>}
         </div>
 
         {attendance.status !== 'NOT_CHECKED_IN' && (
@@ -182,7 +182,7 @@ const AttendanceCheckInWidget = () => {
       </div>
 
       {attendance.location && (
-        <div className="hidden md:flex items-center gap-1 text-[11px] font-medium text-slate-500 bg-white border border-slate-200 px-2.5 py-1 rounded-lg truncate max-w-xs">
+        <div className="hidden xl:flex items-center gap-1 text-[11px] font-medium text-slate-500 bg-white border border-slate-200 px-2.5 py-1.5 rounded-lg truncate max-w-xs">
           <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
           <span className="truncate">{attendance.location}</span>
         </div>
@@ -191,7 +191,7 @@ const AttendanceCheckInWidget = () => {
       <button
         onClick={handleAttendanceAction}
         disabled={attendance.loading}
-        className={`px-4 py-2 text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${
+        className={`px-4 py-2 text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${
           attendance.status === 'CHECKED_IN'
             ? 'bg-rose-600 hover:bg-rose-700 text-white'
             : 'bg-emerald-600 hover:bg-emerald-700 text-white'

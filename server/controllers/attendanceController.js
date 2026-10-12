@@ -2,7 +2,7 @@ import Attendance from '../models/attendanceModel.js';
 import User from '../models/User.js';
 import { Op } from 'sequelize';
 
-// Get Attendance Status for single franchise or active user
+// Get Attendance Status for single franchise or active user (RESTRICTED TO TODAY ONLY)
 export const getAttendanceStatus = async (req, res) => {
   const franchiseId = req.params.franchiseId || req.user?.id;
 
@@ -11,8 +11,21 @@ export const getAttendanceStatus = async (req, res) => {
   }
 
   try {
+    // Calculate Today's Start (00:00:00.000) and End (23:59:59.999)
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Fetch the latest record for TODAY ONLY
     const record = await Attendance.findOne({
-      where: { franchise_id: franchiseId },
+      where: {
+        franchise_id: franchiseId,
+        created_at: {
+          [Op.between]: [startOfDay, endOfDay],
+        },
+      },
       include: [
         {
           model: User,
@@ -23,6 +36,7 @@ export const getAttendanceStatus = async (req, res) => {
       order: [['created_at', 'DESC'], ['id', 'DESC']],
     });
 
+    // If no records exist for TODAY -> Resets status to NOT_CHECKED_IN
     if (!record) {
       return res.status(200).json({ status: 'NOT_CHECKED_IN', record: null });
     }
@@ -31,7 +45,7 @@ export const getAttendanceStatus = async (req, res) => {
       return res.status(200).json({ status: 'CHECKED_IN', record });
     }
 
-    // Returns latest record so frontend displays completed shift stats and enables immediate check-in
+    // Status is COMPLETED for today's shift -> Allows immediate re-check-in if needed
     return res.status(200).json({ status: 'CHECKED_OUT', record });
   } catch (error) {
     console.error('Error fetching attendance status:', error);
@@ -48,6 +62,7 @@ export const checkIn = async (req, res) => {
   }
 
   try {
+    // Check if an ACTIVE session exists
     const activeCheck = await Attendance.findOne({
       where: { 
         franchise_id: franchiseId, 
@@ -115,7 +130,7 @@ export const checkOut = async (req, res) => {
   }
 };
 
-// Get All Attendance Records (Superadmin & Dashboard support)
+// Get All Attendance Records (Full Logs for Superadmin)
 export const getAllAttendance = async (req, res) => {
   const { franchiseId, date } = req.query;
 
