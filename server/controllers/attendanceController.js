@@ -2,7 +2,7 @@ import Attendance from '../models/attendanceModel.js';
 import User from '../models/User.js';
 import { Op } from 'sequelize';
 
-// Get Attendance Status for single franchise
+// Get Attendance Status for single franchise or active user
 export const getAttendanceStatus = async (req, res) => {
   const franchiseId = req.params.franchiseId || req.user?.id;
 
@@ -11,19 +11,8 @@ export const getAttendanceStatus = async (req, res) => {
   }
 
   try {
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
-
     const record = await Attendance.findOne({
-      where: {
-        franchise_id: franchiseId,
-        check_in_time: {
-          [Op.between]: [startOfDay, endOfDay],
-        },
-      },
+      where: { franchise_id: franchiseId },
       include: [
         {
           model: User,
@@ -42,6 +31,7 @@ export const getAttendanceStatus = async (req, res) => {
       return res.status(200).json({ status: 'CHECKED_IN', record });
     }
 
+    // Returns latest record so frontend displays completed shift stats and enables immediate check-in
     return res.status(200).json({ status: 'CHECKED_OUT', record });
   } catch (error) {
     console.error('Error fetching attendance status:', error);
@@ -49,7 +39,7 @@ export const getAttendanceStatus = async (req, res) => {
   }
 };
 
-// Check In
+// Check In (Supports GPS tracking & multiple check-ins per day)
 export const checkIn = async (req, res) => {
   const franchiseId = req.body.franchiseId || req.user?.id;
 
@@ -66,13 +56,18 @@ export const checkIn = async (req, res) => {
     });
 
     if (activeCheck) {
-      return res.status(400).json({ message: 'Already checked in' });
+      return res.status(400).json({ message: 'An active check-in session already exists.' });
     }
+
+    const { latitude, longitude, locationName } = req.body;
 
     const record = await Attendance.create({
       franchise_id: franchiseId,
       check_in_time: new Date(),
       status: 'ACTIVE',
+      check_in_lat: latitude || null,
+      check_in_lng: longitude || null,
+      check_in_location: locationName || null,
     });
 
     return res.status(201).json({
@@ -120,23 +115,19 @@ export const checkOut = async (req, res) => {
   }
 };
 
-// Get All Attendance Records (Superadmin & Franchise Owner support)
+// Get All Attendance Records (Superadmin & Dashboard support)
 export const getAllAttendance = async (req, res) => {
   const { franchiseId, date } = req.query;
 
   try {
     const whereClause = {};
 
-    // 1. Specific Query Filter
     if (franchiseId && franchiseId.trim() !== '') {
       whereClause.franchise_id = franchiseId.trim();
-    } 
-    // 2. Normal Franchise Owner: Restrict to their own ID only
-    else if (req.user && !['SUPERADMIN', 'admin', 'SUPER_ADMIN'].includes(req.user.role)) {
+    } else if (req.user && !['SUPERADMIN', 'admin', 'SUPER_ADMIN'].includes(req.user.role)) {
       whereClause.franchise_id = req.user.id;
     }
 
-    // Optional Date Filter
     if (date) {
       const selectedDate = new Date(date);
       const startOfDay = new Date(selectedDate.setHours(0, 0, 0, 0));

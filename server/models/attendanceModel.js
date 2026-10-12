@@ -11,7 +11,7 @@ const Attendance = sequelize.define(
       autoIncrement: true,
     },
     franchise_id: {
-      type: DataTypes.UUID, // Changed to match User.id type (UUID)
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: User,
@@ -30,6 +30,18 @@ const Attendance = sequelize.define(
       type: DataTypes.STRING(20),
       defaultValue: 'ACTIVE', // 'ACTIVE' or 'COMPLETED'
     },
+    check_in_lat: {
+      type: DataTypes.DECIMAL(10, 8),
+      allowNull: true,
+    },
+    check_in_lng: {
+      type: DataTypes.DECIMAL(11, 8),
+      allowNull: true,
+    },
+    check_in_location: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
   },
   {
     tableName: 'attendance',
@@ -45,15 +57,7 @@ const Attendance = sequelize.define(
   }
 );
 
-// Define Relationships
-Attendance.belongsTo(User, {
-  foreignKey: 'franchise_id',
-  as: 'franchise',
-});
-
-User.hasMany(Attendance, {
-  foreignKey: 'franchise_id',
-  as: 'attendances',
-});
+Attendance.belongsTo(User, { foreignKey: 'franchise_id', as: 'franchise' });
+User.hasMany(Attendance, { foreignKey: 'franchise_id', as: 'attendances' });
 
 export default Attendance;

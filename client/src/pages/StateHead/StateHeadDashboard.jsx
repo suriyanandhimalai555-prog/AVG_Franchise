@@ -4,6 +4,7 @@ import {
   Clock, AlertTriangle, TrendingUp, Search, Eye, Filter, 
   UserPlus, MapPin, X, ArrowUpRight, ArrowDownRight, Layers 
 } from 'lucide-react';
+import AttendanceCheckInWidget from '../../components/AttendanceCheckInWidget';
 
 const stateDashboardData = {
   stateName: "Tamil Nadu",
@@ -41,6 +42,13 @@ const StateHeadDashboard = () => {
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+  <div>
+    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">State Head Operations Dashboard</h1>
+    <p className="text-xs text-slate-500 mt-1">Territory-wide management & operations</p>
+  </div>
+  <AttendanceCheckInWidget />
+</div>
       {/* Header Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>

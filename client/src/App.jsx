@@ -95,7 +95,7 @@ const App = () => {
           <Route path="/super-admin" element={<SuperAdminLayout />}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<SuperAdminDashboard />} />
-            <Route path="franchise-checkin" element={<FranchiseCheckIn />} />
+            <Route path="attendance" element={<FranchiseCheckIn />} />
             <Route path="roles" element={<RoleManagement />} />
             <Route path="users" element={<UserManagement />} />
             <Route path="businesses" element={<BusinessVerticals />} />
