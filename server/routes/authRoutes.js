@@ -13,7 +13,8 @@ import {
   getPendingApprovals,
   approveFranchise,
   rejectFranchise,
-  getMe
+  getMe,
+  getUsersByRoleAndState
 } from '../controllers/authController.js';
 import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
 
@@ -52,5 +53,7 @@ router.get('/territory-overview', protect, getTerritoryOverview);
 router.get('/stockholders-by-state', protect, getStockholdersByState);
 
 router.get('/me', protect, getMe);
+
+router.get('/users-by-role-and-state/:role', protect, getUsersByRoleAndState);
 
 export default router;

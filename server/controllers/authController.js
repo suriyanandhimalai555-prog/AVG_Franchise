@@ -79,6 +79,15 @@ export const createUserByAdmin = async (req, res) => {
     return res.status(400).json({ message: 'Please provide name, email, mobile, and role.' });
   }
 
+  // Validation rules based on role
+  if (role === 'STATE_HEAD' && !state) {
+    return res.status(400).json({ message: 'State is required for State Heads.' });
+  }
+
+  if (role === 'SALES_MANAGER' && (!state || !district)) {
+    return res.status(400).json({ message: 'State and District are required for Sales Managers.' });
+  }
+
   if (role === 'STOCKHOLDER' && (!state || !district || !area)) {
     return res.status(400).json({ message: 'State, District, and Area are required for Stockholders.' });
   }
@@ -501,5 +510,29 @@ export const getMe = async (req, res) => {
   } catch (error) {
     console.error('Error fetching user profile:', error);
     return res.status(500).json({ message: 'Failed to fetch user details' });
+  }
+};
+
+// GET /api/auth/users-by-role-and-state/:role?state=Tamil%20Nadu
+export const getUsersByRoleAndState = async (req, res) => {
+  try {
+    const { role } = req.params;
+    const { state } = req.query;
+
+    const whereClause = { role: role.toUpperCase() };
+    if (state) {
+      whereClause.state = state;
+    }
+
+    const users = await User.findAll({
+      where: whereClause,
+      attributes: ['id', 'userCode', 'name', 'email', 'mobile', 'territory', 'state', 'district', 'area', 'isActive', 'createdAt'],
+      order: [['createdAt', 'DESC']],
+    });
+
+    return res.status(200).json(users);
+  } catch (error) {
+    console.error('Error fetching users by role and state:', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 };

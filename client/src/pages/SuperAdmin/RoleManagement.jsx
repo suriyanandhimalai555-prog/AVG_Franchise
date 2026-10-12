@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Shield, MoreVertical, Layers, Search, Filter, X, UserPlus, Loader2, Eye, Mail, Phone, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { INDIA_LOCATIONS } from '../../data/indiaLocations'; // Import shared locations data
+import { INDIA_LOCATIONS } from '../../data/indiaLocations';
 
 const RoleManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetchingCounts, setFetchingCounts] = useState(true);
 
-  // Action Menu & User Modal States
   const [activeMenuRole, setActiveMenuRole] = useState(null);
   const [selectedRoleForView, setSelectedRoleForView] = useState(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -52,7 +51,6 @@ const RoleManagement = () => {
     { id: 'R-08', title: 'Stockholder / Investor', enumKey: 'STOCKHOLDER', level: 'Level 7', desc: 'Corporate Investor Portfolio & Financial Metrics' },
   ];
 
-  // Close dropdown menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -63,7 +61,6 @@ const RoleManagement = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fetch active user counts from the backend
   const fetchUserCounts = async () => {
     setFetchingCounts(true);
     const token = localStorage.getItem('token');
@@ -71,11 +68,8 @@ const RoleManagement = () => {
 
     try {
       const response = await fetch(`${baseUrl}/api/auth/role-counts`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
       });
-
       if (response.ok) {
         const data = await response.json();
         setRoleCounts(data);
@@ -91,7 +85,6 @@ const RoleManagement = () => {
     fetchUserCounts();
   }, []);
 
-  // Handle Input Changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
@@ -100,7 +93,7 @@ const RoleManagement = () => {
       setFormData((prev) => ({
         ...prev,
         state: value,
-        district: '', // Reset district when state changes
+        district: '',
       }));
       setAvailableDistricts(districts);
     } else {
@@ -108,7 +101,6 @@ const RoleManagement = () => {
     }
   };
 
-  // Fetch users belonging to the clicked role
   const handleViewRoleUsers = async (roleObj) => {
     setSelectedRoleForView(roleObj);
     setIsViewModalOpen(true);
@@ -120,9 +112,7 @@ const RoleManagement = () => {
 
     try {
       const response = await fetch(`${baseUrl}/api/auth/users-by-role/${roleObj.enumKey}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
       });
 
       if (response.ok) {
@@ -140,16 +130,22 @@ const RoleManagement = () => {
     }
   };
 
-  // Create User Handler
   const handleCreateUser = async (e) => {
     e.preventDefault();
 
-    // Validation for roles requiring location details
-    if (formData.role === 'STOCKHOLDER') {
-      if (!formData.state || !formData.district || !formData.area) {
-        toast.error('State, District, and Area are required for Stockholders.');
-        return;
-      }
+    if (formData.role === 'STATE_HEAD' && !formData.state) {
+      toast.error('State is required for State Heads.');
+      return;
+    }
+
+    if (formData.role === 'SALES_MANAGER' && (!formData.state || !formData.district)) {
+      toast.error('State and District are required for Sales Managers.');
+      return;
+    }
+
+    if (formData.role === 'STOCKHOLDER' && (!formData.state || !formData.district || !formData.area)) {
+      toast.error('State, District, and Area are required for Stockholders.');
+      return;
     }
 
     setLoading(true);
@@ -195,7 +191,6 @@ const RoleManagement = () => {
 
   return (
     <div className="space-y-6">
-      {/* Title Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Role Hierarchy & Access Rules</h1>
@@ -203,25 +198,20 @@ const RoleManagement = () => {
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 transition-all active:scale-95"
+          className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 transition-all active:scale-95 cursor-pointer"
         >
           <UserPlus className="w-4 h-4" /> Create User for Role
         </button>
       </div>
 
-      {/* Card Table Wrapper */}
       <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden">
         <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
           <div className="flex items-center gap-2 bg-white border border-slate-200/80 px-3 py-1.5 rounded-xl text-xs w-full sm:w-72">
             <Search className="w-3.5 h-3.5 text-slate-400" />
             <input type="text" placeholder="Filter roles..." className="bg-transparent border-none outline-none w-full text-slate-700" />
           </div>
-          <button className="px-3 py-1.5 bg-white border border-slate-200/80 text-slate-600 text-xs font-medium rounded-xl flex items-center gap-2 self-start sm:self-auto hover:bg-slate-50 transition-colors">
-            <Filter className="w-3.5 h-3.5 text-slate-400" /> Filter Rules
-          </button>
         </div>
 
-        {/* Table */}
         <div className="overflow-x-auto min-h-[350px]">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -263,14 +253,13 @@ const RoleManagement = () => {
                       )}
                     </td>
                     <td className="py-4 px-5 text-slate-500 max-w-xs truncate">{r.desc}</td>
-                    
                     <td className="py-4 px-5 text-right relative">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setActiveMenuRole(activeMenuRole === r.id ? null : r.id);
                         }}
-                        className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors focus:outline-none"
+                        className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                       >
                         <MoreVertical className="w-4 h-4" />
                       </button>
@@ -278,11 +267,11 @@ const RoleManagement = () => {
                       {activeMenuRole === r.id && (
                         <div
                           ref={menuRef}
-                          className="absolute right-5 mt-1 w-36 bg-white rounded-xl shadow-lg border border-slate-100 py-1.5 z-30 animate-in fade-in zoom-in-95 duration-100 text-left"
+                          className="absolute right-5 mt-1 w-36 bg-white rounded-xl shadow-lg border border-slate-100 py-1.5 z-30 text-left"
                         >
                           <button
                             onClick={() => handleViewRoleUsers(r)}
-                            className="w-full px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 flex items-center gap-2 transition"
+                            className="w-full px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 flex items-center gap-2 cursor-pointer"
                           >
                             <Eye className="w-3.5 h-3.5 text-blue-500" /> View Users
                           </button>
@@ -297,28 +286,23 @@ const RoleManagement = () => {
         </div>
       </div>
 
-      {/* VIEW USERS FOR SELECTED ROLE MODAL */}
+      {/* VIEW USERS MODAL */}
       {isViewModalOpen && selectedRoleForView && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
                   <Shield className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-slate-800">
-                    {selectedRoleForView.title} Accounts
-                  </h2>
+                  <h2 className="text-base font-bold text-slate-800">{selectedRoleForView.title} Accounts</h2>
                   <p className="text-[11px] text-slate-500 font-medium">
                     Showing active users under: <span className="font-mono text-blue-600">{selectedRoleForView.enumKey}</span>
                   </p>
                 </div>
               </div>
-              <button
-                onClick={() => setIsViewModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition"
-              >
+              <button onClick={() => setIsViewModalOpen(false)} className="p-1.5 text-slate-400 hover:text-slate-600 rounded-xl cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -342,7 +326,7 @@ const RoleManagement = () => {
                         <th className="py-3 px-4">User Code</th>
                         <th className="py-3 px-4">Full Name</th>
                         <th className="py-3 px-4">Contact</th>
-                        <th className="py-3 px-4">Territory / Area</th>
+                        <th className="py-3 px-4">Region Assignment</th>
                         <th className="py-3 px-4">Created Date</th>
                       </tr>
                     </thead>
@@ -356,10 +340,9 @@ const RoleManagement = () => {
                             <div className="flex items-center gap-1.5 text-slate-500"><Phone className="w-3 h-3" /> {u.mobile}</div>
                           </td>
                           <td className="py-3 px-4">
-                            {u.state || u.area ? (
+                            {u.state || u.district ? (
                               <div className="text-[11px] text-slate-600">
-                                <span className="font-semibold">{u.area || 'N/A'}</span>, {u.district || ''} ({u.state || ''})
-                                {u.territory && <span className="block text-[10px] text-blue-600 font-medium">Territory: {u.territory}</span>}
+                                <span className="font-semibold">{u.area ? `${u.area}, ` : ''}{u.district || ''}</span> ({u.state || ''})
                               </div>
                             ) : (
                               <span className="text-slate-400 text-[11px]">N/A</span>
@@ -375,15 +358,6 @@ const RoleManagement = () => {
                 </div>
               )}
             </div>
-
-            <div className="px-6 py-3 border-t border-slate-100 bg-slate-50/50 flex justify-end">
-              <button
-                onClick={() => setIsViewModalOpen(false)}
-                className="px-4 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-semibold rounded-xl transition"
-              >
-                Close Window
-              </button>
-            </div>
           </div>
         </div>
       )}
@@ -391,16 +365,13 @@ const RoleManagement = () => {
       {/* CREATE USER MODAL */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-blue-600" />
                 <h2 className="text-base font-bold text-slate-800">Create New Role Account</h2>
               </div>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition"
-              >
+              <button onClick={() => setIsModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -414,7 +385,7 @@ const RoleManagement = () => {
                   name="role"
                   value={formData.role}
                   onChange={handleInputChange}
-                  className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition"
+                  className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20"
                 >
                   <option value="ADMIN">Operational Admin</option>
                   <option value="DIRECTOR">Director Analytics</option>
@@ -427,9 +398,7 @@ const RoleManagement = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Full Name
-                </label>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Full Name</label>
                 <input
                   type="text"
                   name="name"
@@ -437,14 +406,12 @@ const RoleManagement = () => {
                   value={formData.name}
                   onChange={handleInputChange}
                   placeholder="e.g. Rajesh Kumar"
-                  className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition"
+                  className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Official Email Address
-                </label>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Official Email Address</label>
                 <input
                   type="email"
                   name="email"
@@ -452,14 +419,12 @@ const RoleManagement = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="rajesh@avgfranchise.com"
-                  className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition"
+                  className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Mobile Number
-                </label>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Mobile Number</label>
                 <input
                   type="text"
                   name="mobile"
@@ -467,88 +432,80 @@ const RoleManagement = () => {
                   value={formData.mobile}
                   onChange={handleInputChange}
                   placeholder="9876543210"
-                  className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition"
+                  className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800"
                 />
               </div>
 
-              {/* DYNAMIC TERRITORY & LOCATION SECTION FOR STOCKHOLDER */}
-              {formData.role === 'STOCKHOLDER' && (
+              {/* DYNAMIC TERRITORY & LOCATION FOR STATE_HEAD, SALES_MANAGER, & STOCKHOLDER */}
+              {(formData.role === 'STATE_HEAD' || formData.role === 'SALES_MANAGER' || formData.role === 'STOCKHOLDER') && (
                 <div className="pt-2 border-t border-slate-100 space-y-3.5">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-blue-600">
-                    <MapPin className="w-4 h-4" /> Stockholder Region & Territory Assignment
+                    <MapPin className="w-4 h-4" /> Region & Territory Assignment
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      Territory Region
-                    </label>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Territory Region</label>
                     <input
                       type="text"
                       name="territory"
                       value={formData.territory}
                       onChange={handleInputChange}
                       placeholder="e.g. South Zone / Zone-4"
-                      className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition"
+                      className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                        State
-                      </label>
+                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">State</label>
                       <select
                         name="state"
-                        required={formData.role === 'STOCKHOLDER'}
+                        required={['STATE_HEAD', 'SALES_MANAGER', 'STOCKHOLDER'].includes(formData.role)}
                         value={formData.state}
                         onChange={handleInputChange}
-                        className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition cursor-pointer"
+                        className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 cursor-pointer"
                       >
                         <option value="">Select State</option>
                         {Object.keys(INDIA_LOCATIONS).map((state) => (
-                          <option key={state} value={state}>
-                            {state}
-                          </option>
+                          <option key={state} value={state}>{state}</option>
                         ))}
                       </select>
                     </div>
 
+                    {(formData.role === 'SALES_MANAGER' || formData.role === 'STOCKHOLDER') && (
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">District</label>
+                        <select
+                          name="district"
+                          required={['SALES_MANAGER', 'STOCKHOLDER'].includes(formData.role)}
+                          value={formData.district}
+                          disabled={!formData.state}
+                          onChange={handleInputChange}
+                          className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 disabled:opacity-50 cursor-pointer"
+                        >
+                          <option value="">Select District</option>
+                          {availableDistricts.map((dist) => (
+                            <option key={dist} value={dist}>{dist}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+
+                  {formData.role === 'STOCKHOLDER' && (
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                        District
-                      </label>
-                      <select
-                        name="district"
+                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Area / Locality</label>
+                      <input
+                        type="text"
+                        name="area"
                         required={formData.role === 'STOCKHOLDER'}
-                        value={formData.district}
-                        disabled={!formData.state}
+                        value={formData.area}
                         onChange={handleInputChange}
-                        className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition disabled:opacity-50 cursor-pointer"
-                      >
-                        <option value="">Select District</option>
-                        {availableDistricts.map((dist) => (
-                          <option key={dist} value={dist}>
-                            {dist}
-                          </option>
-                        ))}
-                      </select>
+                        placeholder="e.g. Indiranagar Sector 3"
+                        className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800"
+                      />
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      Area / Locality (Typed by Admin)
-                    </label>
-                    <input
-                      type="text"
-                      name="area"
-                      required={formData.role === 'STOCKHOLDER'}
-                      value={formData.area}
-                      onChange={handleInputChange}
-                      placeholder="e.g. Indiranagar Sector 3"
-                      className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition"
-                    />
-                  </div>
+                  )}
                 </div>
               )}
 
@@ -556,14 +513,14 @@ const RoleManagement = () => {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition"
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-md shadow-blue-500/20 transition disabled:opacity-50 flex items-center gap-2"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-md shadow-blue-500/20 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
                 >
                   {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <span>{loading ? 'Generating Account...' : 'Generate & Email Password'}</span>
