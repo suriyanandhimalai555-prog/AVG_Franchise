@@ -13,6 +13,7 @@ const stateHeadNavItems = [
   { label: 'Franchise Network', path: '/state-head/franchise-network', icon: Building2 },
   // { label: 'State Reports', path: '/state-head/reports', icon: BarChart3 },
   // { label: 'Pending Approvals', path: '/state-head/approvals', icon: Clock },
+  { label: 'Report Of Salesmanager', path: '/state-head/report-of-salesmanager', icon: BarChart3 },
   { label: 'Ticket Management', path: '/state-head/tickets', icon: BarChart3 },
 ];
 
