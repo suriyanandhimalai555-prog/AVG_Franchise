@@ -17,9 +17,10 @@ import Logo from '../../assets/logo.png';
 const navItems = [
   { label: 'Dashboard', path: '/sales-manager/dashboard', icon: LayoutDashboard },
   { label: 'My Franchises', path: '/sales-manager/franchises', icon: Store },
-  { label: 'Daily Entries', path: '/sales-manager/daily-verifications', icon: CheckSquare },
+  // { label: 'Daily Entries', path: '/sales-manager/daily-verifications', icon: CheckSquare },
   { label: 'Collections & Targets', path: '/sales-manager/collections', icon: IndianRupee },
   { label: 'Franchise Visits', path: '/sales-manager/visits', icon: MapPin },
+  { label: 'Daily Reports', path: '/sales-manager/daily-reports', icon: CheckSquare },
   { label: 'Ticket Management', path: '/sales-manager/tickets', icon: Ticket },
 ];
 

@@ -65,6 +65,7 @@ import DailyEntryVerification from './pages/SalesManager/DailyEntryVerification'
 import CollectionFollowup from './pages/SalesManager/CollectionFollowup';
 import FranchiseVisits from './pages/SalesManager/FranchiseVisits';
 import TicketSalesManager from './pages/SalesManager/TicketSalesManager';
+import DailyReportSalesManager from './pages/SalesManager/DailyReportSalesManager';
 
 // Franchise Layout & Pages
 import FranchiseLayout from './layouts/FranchiseLayout';
@@ -175,6 +176,7 @@ const App = () => {
             <Route path="collections" element={<CollectionFollowup />} />
             <Route path="visits" element={<FranchiseVisits />} />
             <Route path="tickets" element={<TicketSalesManager />} />
+            <Route path="daily-reports" element={<DailyReportSalesManager />} />
           </Route>
         </Route>
 

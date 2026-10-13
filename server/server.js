@@ -7,6 +7,7 @@ import stockRoutes from './routes/stockRoutes.js';
 import stockRequestRoutes from './routes/stockRequestRoutes.js';
 import ticketRoutes from './routes/ticketRoutes.js';
 import attendanceRoutes from './routes/attendanceRoutes.js';
+import dailyReportRoutes from './routes/dailyReportRoutes.js';
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ app.use('/api/stocks', stockRoutes);
 app.use('/api/stock-requests', stockRequestRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/daily-reports', dailyReportRoutes);
 
 // Database connection & Auto-sync tables
 initDB();
