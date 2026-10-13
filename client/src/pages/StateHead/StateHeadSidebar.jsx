@@ -10,9 +10,9 @@ const stateHeadNavItems = [
   { label: 'State Overview', path: '/state-head/dashboard', icon: Map },
   { label: 'District Operations', path: '/state-head/districts', icon: Layers },
   { label: 'Sales Managers', path: '/state-head/managers', icon: Users },
-  { label: 'Franchise Network', path: '/state-head/franchises', icon: Building2 },
-  { label: 'State Reports', path: '/state-head/reports', icon: BarChart3 },
-  { label: 'Pending Approvals', path: '/state-head/approvals', icon: Clock },
+  { label: 'Franchise Network', path: '/state-head/franchise-network', icon: Building2 },
+  // { label: 'State Reports', path: '/state-head/reports', icon: BarChart3 },
+  // { label: 'Pending Approvals', path: '/state-head/approvals', icon: Clock },
   { label: 'Ticket Management', path: '/state-head/tickets', icon: BarChart3 },
 ];
 

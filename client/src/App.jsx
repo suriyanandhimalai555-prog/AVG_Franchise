@@ -55,6 +55,7 @@ import SalesManagers from './pages/StateHead/SalesManagers';
 import StateReports from './pages/StateHead/StateReports';
 import StateApprovals from './pages/StateHead/StateApprovals';
 import TicketStateHead from './pages/StateHead/TicketStateHead';
+import FranchiseNetwork from './pages/StateHead/FranchiseNetwork';
 
 // Sales Manager Layout & Pages
 import SalesManagerLayout from './layouts/SalesManagerLayout';
@@ -160,6 +161,7 @@ const App = () => {
             <Route path="reports" element={<StateReports />} />
             <Route path="approvals" element={<StateApprovals />} />
             <Route path="tickets" element={<TicketStateHead />} />
+            <Route path="franchise-network" element={<FranchiseNetwork />} />
           </Route>
         </Route>
 
