@@ -11,12 +11,35 @@ const StateHeadLayout = () => {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
-  // Load User Session from localStorage on Mount
+  // Load User Session from localStorage on Mount & Fetch Latest Profile
   useEffect(() => {
     try {
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
-        setCurrentUser(JSON.parse(storedUser));
+        const parsed = JSON.parse(storedUser);
+        setCurrentUser(parsed);
+      }
+
+      // Fetch latest profile info (including assigned state) from backend
+      const token = localStorage.getItem('token');
+      if (token) {
+        const RAW_API_URL = import.meta.env.VITE_APP_BASE_URL || '';
+        const API_BASE_URL = RAW_API_URL.endsWith('/') ? RAW_API_URL.slice(0, -1) : RAW_API_URL;
+
+        fetch(`${API_BASE_URL}/api/auth/me`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data && !data.message) {
+              setCurrentUser((prev) => {
+                const updated = { ...prev, ...data };
+                localStorage.setItem('user', JSON.stringify(updated));
+                return updated;
+              });
+            }
+          })
+          .catch((err) => console.error('Failed to sync profile state:', err));
       }
     } catch (error) {
       console.error('Failed to parse state head user data:', error);
@@ -51,6 +74,9 @@ const StateHeadLayout = () => {
     }
     return name.slice(0, 2).toUpperCase();
   };
+
+  // Resolve dynamic state name
+  const dynamicState = currentUser?.state || currentUser?.assignedState || 'State';
 
   return (
     <div className="h-screen w-full bg-slate-50 flex overflow-hidden text-slate-800 antialiased">
@@ -90,7 +116,7 @@ const StateHeadLayout = () => {
           <div className="flex items-center gap-3">
             <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
               <MapPin className="w-3.5 h-3.5 text-emerald-600" /> 
-              {currentUser?.assignedState || currentUser?.state || 'Tamil Nadu'} Operations
+              {dynamicState} Operations
             </span>
 
             <button className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl relative transition-colors">
@@ -114,7 +140,7 @@ const StateHeadLayout = () => {
                     {currentUser?.name || 'State Head'}
                   </div>
                   <div className="text-[10px] text-slate-400 font-medium">
-                    State Head Dashboard
+                    {dynamicState} Jurisdiction
                   </div>
                 </div>
                 <ChevronDown className={`w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 transition-transform duration-200 ${profileDropdownOpen ? 'rotate-180' : ''}`} />
@@ -142,7 +168,6 @@ const StateHeadLayout = () => {
                   <button
                     onClick={() => {
                       setProfileDropdownOpen(false);
-                      // Profile settings route if needed
                     }}
                     className="w-full flex items-center gap-2.5 px-4 py-2 mt-1 text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
                   >
