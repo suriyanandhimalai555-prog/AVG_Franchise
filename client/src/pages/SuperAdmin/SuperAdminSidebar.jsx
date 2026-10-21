@@ -16,6 +16,7 @@ const navItems = [
   { label: 'Territory Mapping', path: '/super-admin/territories', icon: MapPin },
   { label: 'Approvals Queue', path: '/super-admin/approvals', icon: CheckSquare },
   { label: 'Ticket Management', path: '/super-admin/tickets', icon: BarChart3 },
+  { label: 'Profile', path: '/super-admin/profile', icon: User },
 ];
 
 const SuperAdminSidebar = ({ isOpen, onClose, user, onLogout }) => {

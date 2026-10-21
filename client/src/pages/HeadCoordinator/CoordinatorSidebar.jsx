@@ -12,6 +12,7 @@ const coordinatorNavItems = [
   { label: 'State Comparison Matrix', path: '/head-coordinator/comparison', icon: BarChart2 },
   { label: 'Approvals & Escalations', path: '/head-coordinator/approvals', icon: Clock },
   { label: 'Ticket Management', path: '/head-coordinator/tickets', icon: AlertTriangle },
+  { label: 'Profile', path: '/head-coordinator/profile', icon: User },
 ];
 
 const CoordinatorSidebar = ({ isOpen, onClose, user, onLogout }) => {

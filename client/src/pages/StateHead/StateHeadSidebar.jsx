@@ -15,6 +15,7 @@ const stateHeadNavItems = [
   // { label: 'Pending Approvals', path: '/state-head/approvals', icon: Clock },
   { label: 'Report Of Salesmanager', path: '/state-head/report-of-salesmanager', icon: BarChart3 },
   { label: 'Ticket Management', path: '/state-head/tickets', icon: BarChart3 },
+  { label: 'Profile', path: '/state-head/profile', icon: User },
 ];
 
 const StateHeadSidebar = ({ isOpen, onClose, user, onLogout }) => {

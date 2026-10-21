@@ -30,6 +30,7 @@ const navItems = [
   { label: 'Commission Earnings', path: '/franchise/commissions', icon: Percent },
   { label: 'Pending Tasks', path: '/franchise/tasks', icon: CheckSquare },
   { label: 'Rise Ticket', path: '/franchise/tickets', icon: LogOut },
+  { label: 'Profile', path: '/franchise/profile', icon: Briefcase }
 ];
 
 const FranchiseSidebar = ({ isOpen, onClose, currentUser }) => {

@@ -55,6 +55,7 @@ const StockholderSidebar = ({ isOpen, onClose, currentUser }) => {
     { label: 'Stock Requests', path: '/stockholder/stock-requests', icon: TrendingUp },
     { label: 'Financial Reports', path: '/stockholder/reports', icon: FileText },
     { label: 'Transactions', path: '/stockholder/transactions', icon: CreditCard },
+    { label: 'Profile', path: '/stockholder/profile', icon: ShieldCheck },
   ];
 
   const handleLogout = () => {

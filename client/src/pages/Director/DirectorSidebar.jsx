@@ -13,6 +13,7 @@ const directorNavItems = [
   { label: 'Sales Managers', path: '/director/managers', icon: Users },
   { label: 'Performance Rankings', path: '/director/rankings', icon: Award },
   { label: 'Ticket Management', path: '/director/tickets', icon: BarChart3 },
+  { label: 'Profile', path: '/director/profile', icon: User },
 ];
 
 const DirectorSidebar = ({ isOpen, onClose, user, onLogout }) => {

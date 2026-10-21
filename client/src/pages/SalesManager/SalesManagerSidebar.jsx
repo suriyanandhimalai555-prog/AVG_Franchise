@@ -22,6 +22,7 @@ const navItems = [
   { label: 'Franchise Visits', path: '/sales-manager/visits', icon: MapPin },
   { label: 'Daily Reports', path: '/sales-manager/daily-reports', icon: CheckSquare },
   { label: 'Ticket Management', path: '/sales-manager/tickets', icon: Ticket },
+  { label: 'Profile', path: '/sales-manager/profile', icon: User },
 ];
 
 const SalesManagerSidebar = ({ isOpen, onClose, user, onLogout }) => {

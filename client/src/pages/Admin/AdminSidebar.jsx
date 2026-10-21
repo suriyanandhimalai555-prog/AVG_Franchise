@@ -16,6 +16,7 @@ const adminNavItems = [
     { label: 'Approvals & Workflows', path: '/admin/approvals', icon: CheckSquare },
     { label: 'Operational Reports & Audits', path: '/admin/reports', icon: BarChart3 },
     { label: 'Ticket Management', path: '/admin/tickets', icon: BarChart3 },
+    { label: 'Profile', path: '/admin/profile', icon: User },
 ];
 
 const AdminSidebar = ({ isOpen, onClose, user, onLogout }) => {

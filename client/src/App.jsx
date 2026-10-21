@@ -18,6 +18,7 @@ import AuditLogs from './pages/SuperAdmin/AuditLogs';
 import TicketSuperAdmin from './pages/SuperAdmin/TicketSuperAdmin';
 import FranchiseCheckIn from './pages/SuperAdmin/FranchiseCheckIn';
 import BranchStock from './pages/SuperAdmin/BranchStock';
+import SuperAdminProfile from './pages/SuperAdmin/SuperAdminProfile';
 
 // Admin Layout & Pages
 import AdminLayout from './layouts/AdminLayout';
@@ -29,6 +30,7 @@ import DailyEntries from './pages/Admin/DailyEntries';
 import HierarchyManagement from './pages/Admin/HierarchyManagement';
 import { OperationalApprovals, OperationalReports } from './pages/Admin/OperationalApprovals';
 import TicketAdmin from './pages/Admin/TicketAdmin';
+import AdminProfile from './pages/Admin/AdminProfile';
 
 // Director Layout & Pages
 import DirectorLayout from './layouts/DirectorLayout';
@@ -38,6 +40,7 @@ import DirectorFranchises from './pages/Director/DirectorFranchises';
 import DirectorManagers from './pages/Director/DirectorManagers';
 import DirectorRankings from './pages/Director/DirectorRankings';
 import TicketDirector from './pages/Director/TicketDirector';
+import DirectorProfile from './pages/Director/DirectorProfile';
 
 // Head Coordinator Layout & Pages
 import CoordinatorLayout from './layouts/CoordinatorLayout';
@@ -46,6 +49,7 @@ import StateHeadOperations from './pages/HeadCoordinator/StateHeadOperations';
 import StateComparison from './pages/HeadCoordinator/StateComparison';
 import CoordinatorApprovals from './pages/HeadCoordinator/CoordinatorApprovals';
 import TicketHeadCoordinator from './pages/HeadCoordinator/TicketHeadCoordinator';
+import CoordinatorProfile from './pages/HeadCoordinator/CoordinatorProfile';
 
 // State Head Layout & Pages
 import StateHeadLayout from './layouts/StateHeadLayout';
@@ -57,6 +61,7 @@ import StateApprovals from './pages/StateHead/StateApprovals';
 import TicketStateHead from './pages/StateHead/TicketStateHead';
 import FranchiseNetwork from './pages/StateHead/FranchiseNetwork';
 import ReportOfSalesmanager from './pages/StateHead/ReportOfSalesmanager';
+import StateHeadProfile from './pages/StateHead/StateHeadProfile';
 
 // Sales Manager Layout & Pages
 import SalesManagerLayout from './layouts/SalesManagerLayout';
@@ -67,6 +72,7 @@ import CollectionFollowup from './pages/SalesManager/CollectionFollowup';
 import FranchiseVisits from './pages/SalesManager/FranchiseVisits';
 import TicketSalesManager from './pages/SalesManager/TicketSalesManager';
 import DailyReportSalesManager from './pages/SalesManager/DailyReportSalesManager';
+import SalesManagerProfile from './pages/SalesManager/SalesManagerProfile';
 
 // Franchise Layout & Pages
 import FranchiseLayout from './layouts/FranchiseLayout';
@@ -78,12 +84,14 @@ import Leads from './pages/Franchise/Leads';
 import CommissionEarnings from './pages/Franchise/CommissionEarnings';
 import PendingTasks from './pages/Franchise/PendingTasks';
 import TicketFranchise from './pages/Franchise/TicketFranchise';
+import FranchiseProfile from './pages/Franchise/FranchiseProfile';
 
 // Stockholder Layout & Pages
 import StockholderLayout from './layouts/StockholderLayout';
 import StockholderDashboard from './pages/Stockholder/StockholderDashboard';
 import StockUpdate from './pages/Stockholder/StockUpdate';
 import StockRequest from './pages/Stockholder/StockRequest';
+import StockHolderProfile from './pages/Stockholder/StockHolderProfile';
 
 const App = () => {
   return (
@@ -109,6 +117,7 @@ const App = () => {
             <Route path="audit" element={<AuditLogs />} />
             <Route path="tickets" element={<TicketSuperAdmin />} />
             <Route path="branch-stock" element={<BranchStock />} />
+            <Route path="profile" element={<SuperAdminProfile />} />
           </Route>
         </Route>
 
@@ -125,6 +134,7 @@ const App = () => {
             <Route path="approvals" element={<OperationalApprovals />} />
             <Route path="reports" element={<OperationalReports />} />
             <Route path="tickets" element={<TicketAdmin />} />
+            <Route path="profile" element={<AdminProfile />} />
           </Route>
         </Route>
 
@@ -138,6 +148,7 @@ const App = () => {
             <Route path="managers" element={<DirectorManagers />} />
             <Route path="rankings" element={<DirectorRankings />} />
             <Route path="tickets" element={<TicketDirector />} />
+            <Route path="profile" element={<DirectorProfile />} />
           </Route>
         </Route>
 
@@ -150,6 +161,7 @@ const App = () => {
             <Route path="comparison" element={<StateComparison />} />
             <Route path="approvals" element={<CoordinatorApprovals />} />
             <Route path="tickets" element={<TicketHeadCoordinator />} />
+            <Route path="profile" element={<CoordinatorProfile />} />
           </Route>
         </Route>
 
@@ -165,6 +177,7 @@ const App = () => {
             <Route path="tickets" element={<TicketStateHead />} />
             <Route path="franchise-network" element={<FranchiseNetwork />} />
             <Route path="report-of-salesmanager" element={<ReportOfSalesmanager />} />
+            <Route path="profile" element={<StateHeadProfile />} />
           </Route>
         </Route>
 
@@ -179,6 +192,7 @@ const App = () => {
             <Route path="visits" element={<FranchiseVisits />} />
             <Route path="tickets" element={<TicketSalesManager />} />
             <Route path="daily-reports" element={<DailyReportSalesManager />} />
+            <Route path="profile" element={<SalesManagerProfile />} />
           </Route>
         </Route>
 
@@ -195,6 +209,7 @@ const App = () => {
             <Route path="commissions" element={<CommissionEarnings />} />
             <Route path="tasks" element={<PendingTasks />} />
             <Route path="tickets" element={<TicketFranchise />} />
+            <Route path="profile" element={<FranchiseProfile />} />
           </Route>
         </Route>
 
@@ -205,6 +220,7 @@ const App = () => {
             <Route path="dashboard" element={<StockholderDashboard />} />
             <Route path="stock-update" element={<StockUpdate />} />
             <Route path="stock-requests" element={<StockRequest />} />
+            <Route path="profile" element={<StockHolderProfile />} />
           </Route>
         </Route>
 
