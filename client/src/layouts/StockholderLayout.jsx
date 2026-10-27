@@ -196,7 +196,7 @@ const StockholderLayout = () => {
                   {/* Dropdown Navigation Actions */}
                   <div className="pt-1">
                     <button
-                      onClick={() => setProfileDropdownOpen(false)}
+                      onClick={ () => navigate('/stockholder/profile') }
                       className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
                     >
                       <User className="w-4 h-4 text-slate-400 shrink-0" />

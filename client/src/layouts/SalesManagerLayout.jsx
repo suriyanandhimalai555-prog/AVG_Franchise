@@ -141,8 +141,7 @@ const SalesManagerLayout = () => {
 
                   <button
                     onClick={() => {
-                      setProfileDropdownOpen(false);
-                      // Route to profile settings if needed
+                      navigate('/sales-manager/profile');
                     }}
                     className="w-full flex items-center gap-2.5 px-4 py-2 mt-1 text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
                   >
