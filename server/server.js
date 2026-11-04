@@ -8,6 +8,7 @@ import stockRequestRoutes from './routes/stockRequestRoutes.js';
 import ticketRoutes from './routes/ticketRoutes.js';
 import attendanceRoutes from './routes/attendanceRoutes.js';
 import dailyReportRoutes from './routes/dailyReportRoutes.js';
+import whatsappRoutes from './routes/whatsappRoutes.js';
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use('/api/stock-requests', stockRequestRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/daily-reports', dailyReportRoutes);
+app.use('/api/whatsapp', whatsappRoutes);
 
 // Database connection & Auto-sync tables
 initDB();
