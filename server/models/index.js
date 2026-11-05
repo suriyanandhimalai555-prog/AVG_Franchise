@@ -2,7 +2,7 @@
 import sequelize from '../config/db.js';
 import User from './User.js';
 import { Stock } from './stockModel.js';
-import { StockRequest } from './stockRequestModel.js';
+// import { StockRequest } from './stockRequestModel.js';
 import Attendance from './attendanceModel.js';
 import AppSetting from './AppSetting.js';
 
@@ -24,7 +24,7 @@ export {
   sequelize, 
   User, 
   Stock, 
-  StockRequest, 
+ 
   Attendance, 
   AppSetting, 
   initDB 
