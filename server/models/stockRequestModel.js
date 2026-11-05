@@ -11,7 +11,7 @@ export const StockRequest = sequelize.define('StockRequest', {
   },
   franchise_id: {
     type: DataTypes.UUID,
-    allowNull: true,
+    allowNull: false,
     references: {
       model: User,
       key: 'id',
@@ -19,7 +19,7 @@ export const StockRequest = sequelize.define('StockRequest', {
   },
   stockholder_id: {
     type: DataTypes.UUID,
-    allowNull: true, // <-- CHANGED from false to true to prevent PostgreSQL NOT NULL violation on existing rows
+    allowNull: false,
     references: {
       model: User,
       key: 'id',
