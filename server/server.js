@@ -9,6 +9,7 @@ import ticketRoutes from './routes/ticketRoutes.js';
 import attendanceRoutes from './routes/attendanceRoutes.js';
 import dailyReportRoutes from './routes/dailyReportRoutes.js';
 import whatsappRoutes from './routes/whatsappRoutes.js';
+import appSettingRoutes from './routes/appSettingRoutes.js';
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.use('/api/tickets', ticketRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/daily-reports', dailyReportRoutes);
 app.use('/api/whatsapp', whatsappRoutes);
+app.use('/api/app-settings', appSettingRoutes);
 
 // Database connection & Auto-sync tables
 initDB();

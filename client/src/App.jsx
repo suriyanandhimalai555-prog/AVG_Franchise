@@ -19,6 +19,7 @@ import TicketSuperAdmin from './pages/SuperAdmin/TicketSuperAdmin';
 import FranchiseCheckIn from './pages/SuperAdmin/FranchiseCheckIn';
 import BranchStock from './pages/SuperAdmin/BranchStock';
 import SuperAdminProfile from './pages/SuperAdmin/SuperAdminProfile';
+import AppVersion from './pages/SuperAdmin/AppVersion';
 
 // Admin Layout & Pages
 import AdminLayout from './layouts/AdminLayout';
@@ -120,6 +121,7 @@ const App = () => {
             <Route path="tickets" element={<TicketSuperAdmin />} />
             <Route path="branch-stock" element={<BranchStock />} />
             <Route path="profile" element={<SuperAdminProfile />} />
+            <Route path="app-version" element={<AppVersion />} />
           </Route>
         </Route>
 

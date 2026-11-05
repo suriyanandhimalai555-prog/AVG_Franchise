@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, ShieldCheck, Users, Briefcase, MapPin, 
-  CheckSquare, LogOut, X, ChevronRight, BarChart3, User
+  CheckSquare, LogOut, X, ChevronRight, BarChart3, User, AppWindowIcon
 } from 'lucide-react';
 import Logo from '../../assets/logo.png';
 
@@ -17,6 +17,7 @@ const navItems = [
   { label: 'Approvals Queue', path: '/super-admin/approvals', icon: CheckSquare },
   { label: 'Ticket Management', path: '/super-admin/tickets', icon: BarChart3 },
   { label: 'Profile', path: '/super-admin/profile', icon: User },
+  { label: 'App Version', path: '/super-admin/app-version', icon: AppWindowIcon },
 ];
 
 const SuperAdminSidebar = ({ isOpen, onClose, user, onLogout }) => {
