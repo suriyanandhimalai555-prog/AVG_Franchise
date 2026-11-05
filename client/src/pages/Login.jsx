@@ -172,6 +172,12 @@ const Login = () => {
             </Link>
           </p>
 
+          <p>
+            <Link to="/privacy-policy" className="text-xs text-slate-400 hover:text-slate-600 hover:underline">
+              Privacy Policy
+            </Link>
+          </p>
+
           <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-400 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
             <span>Encrypted Enterprise Authentication</span>

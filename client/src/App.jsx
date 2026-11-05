@@ -92,6 +92,7 @@ import StockholderDashboard from './pages/Stockholder/StockholderDashboard';
 import StockUpdate from './pages/Stockholder/StockUpdate';
 import StockRequest from './pages/Stockholder/StockRequest';
 import StockHolderProfile from './pages/Stockholder/StockHolderProfile';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 const App = () => {
   return (
@@ -100,6 +101,7 @@ const App = () => {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Register />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
         {/* 1. Super Admin Section */}
         <Route element={<ProtectedRoute allowedRoles={['SUPER_ADMIN']} />}>
