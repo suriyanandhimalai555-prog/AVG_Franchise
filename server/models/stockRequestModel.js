@@ -11,7 +11,7 @@ export const StockRequest = sequelize.define('StockRequest', {
   },
   franchise_id: {
     type: DataTypes.UUID,
-    allowNull: false,
+    allowNull: true,
     references: {
       model: User,
       key: 'id',
