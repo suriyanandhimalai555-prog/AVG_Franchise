@@ -67,44 +67,36 @@ export const handleIncomingWebhook = async (req, res) => {
   }
 };
 
-// 1. Send Outbound Message via Meta API & Save to DB
+// In your backend controllers/whatsappController.js
 export const sendWhatsAppMessage = async (req, res) => {
   try {
     const { phone, message, name } = req.body;
     const WHATSAPP_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
     const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
-    if (!phone || !message) {
-      return res.status(400).json({ error: 'Phone and message are required' });
-    }
-
     // Call Meta Cloud API
-    try {
-      await axios.post(
-        `https://graph.facebook.com/v17.0/${PHONE_NUMBER_ID}/messages`,
-        {
-          messaging_product: 'whatsapp',
-          to: phone,
-          type: 'text',
-          text: { body: message },
+    const metaResponse = await axios.post(
+      `https://graph.facebook.com/v17.0/${PHONE_NUMBER_ID}/messages`,
+      {
+        messaging_product: 'whatsapp',
+        to: phone,
+        type: 'text',
+        text: { body: message },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${WHATSAPP_TOKEN}`,
+          'Content-Type': 'application/json',
         },
-        {
-          headers: {
-            Authorization: `Bearer ${WHATSAPP_TOKEN}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-    } catch (metaError) {
-      console.error('Meta API Error Response:', metaError.response?.data || metaError.message);
-      return res.status(400).json({ 
-        error: 'Failed to send via Meta API. Ensure recipient phone is added in Meta Dashboard test recipients list.' 
-      });
-    }
+      }
+    ).catch(err => {
+      // This will capture Meta's exact rejection reason (e.g., 24-hour window violation)
+      console.error('Meta Rejection:', err.response?.data);
+      throw new Error(err.response?.data?.error?.message || 'Meta API rejected message');
+    });
 
     const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    // Save outbound message into PostgreSQL database so it persists
     const savedMsg = await WhatsappMessage.create({
       phone: phone,
       name: name || 'Customer',
@@ -115,8 +107,7 @@ export const sendWhatsAppMessage = async (req, res) => {
 
     return res.status(200).json(savedMsg);
   } catch (error) {
-    console.error('WhatsApp Send Error:', error);
-    return res.status(500).json({ error: 'Internal server error dispatching message' });
+    return res.status(400).json({ error: error.message });
   }
 };
 
