@@ -1,7 +1,7 @@
 import sequelize from '../config/db.js';
 import User from './User.js';
 import { Stock } from './stockModel.js';
-import { StockRequest } from './stockRequestModel.js';
+// import { StockRequest } from './stockRequestModel.js';
 import Attendance from './attendanceModel.js';
 import AppSetting from './AppSetting.js';
 import WhatsappMessage from './whatsappMessage.js'; // <-- 1. Import the WhatsApp model
@@ -21,7 +21,7 @@ export {
   sequelize, 
   User, 
   Stock, 
-  StockRequest, 
+  // StockRequest, 
   Attendance, 
   AppSetting, 
   WhatsappMessage, // <-- 2. Export it so it registers with Sequelize
