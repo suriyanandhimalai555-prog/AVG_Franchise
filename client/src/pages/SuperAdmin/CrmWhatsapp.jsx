@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Send, Search, Phone, CheckCheck, User, RefreshCw, Plus, X } from 'lucide-react';
+import { MessageCircle, Send, Search, Phone, CheckCheck, User, RefreshCw, Plus, X, ArrowLeft } from 'lucide-react';
 
 const CrmWhatsapp = () => {
   const [chats, setChats] = useState([]);
@@ -11,6 +11,7 @@ const CrmWhatsapp = () => {
   const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
   const [newPhone, setNewPhone] = useState('');
   const [newName, setNewName] = useState('');
+  const [mobileView, setMobileView] = useState('list'); // 'list' or 'chat' for mobile devices
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -39,10 +40,7 @@ const CrmWhatsapp = () => {
       const contentType = response.headers.get("content-type");
       if (response.ok && contentType && contentType.includes("application/json")) {
         const data = await response.json();
-        setChats(prevChats => {
-          // Keep local newly added chat if backend hasn't indexed it yet
-          return data;
-        });
+        setChats(data);
         setSelectedChat(prev => {
           if (!prev && data.length > 0) return data[0];
           return prev ? data.find(c => c.phone === prev.phone) || prev : data[0];
@@ -128,6 +126,7 @@ const CrmWhatsapp = () => {
     setIsNewChatModalOpen(false);
     setNewPhone('');
     setNewName('');
+    setMobileView('chat'); // switch view on mobile
   };
 
   const filteredChats = chats.filter(chat => 
@@ -137,24 +136,25 @@ const CrmWhatsapp = () => {
 
   return (
     <div className="space-y-6 relative">
+      {/* Top Header Title */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">WhatsApp CRM</h1>
-          <p className="text-xs text-slate-500 mt-1">Manage customer communications and live chat threads in real-time</p>
+          <p className="text-xs text-slate-500 mt-1">Manage live client threads and automated communications</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <button 
             type="button"
             onClick={() => setIsNewChatModalOpen(true)}
-            className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl shadow-sm transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl shadow-sm transition-all flex items-center gap-2 active:scale-95"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-4 h-4" />
             <span>New Chat</span>
           </button>
           <button 
             type="button"
             onClick={fetchChats}
-            className="px-3.5 py-2 bg-white border border-slate-200/80 text-slate-700 text-xs font-semibold rounded-xl shadow-sm hover:bg-slate-50 transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl shadow-sm hover:bg-slate-50 transition-all flex items-center gap-2"
           >
             <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
             <span>Refresh</span>
@@ -162,23 +162,25 @@ const CrmWhatsapp = () => {
         </div>
       </div>
 
+      {/* Main Chat Layout Container */}
       <div className="h-[calc(100vh-13rem)] flex bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm">
         
-        {/* Left Sidebar */}
-        <div className="w-80 border-r border-slate-200/80 flex flex-col bg-slate-50/50">
-          <div className="p-4 border-b border-slate-200/80 flex items-center justify-between bg-white">
+        {/* Left Sidebar: Conversations List */}
+        <div className={`w-full lg:w-80 border-r border-slate-200 flex flex-col bg-slate-50/40 ${mobileView === 'chat' ? 'hidden lg:flex' : 'flex'}`}>
+          <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-white">
             <div className="flex items-center gap-2">
               <MessageCircle className="w-4 h-4 text-emerald-600" />
               <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Conversations</h2>
             </div>
-            <span className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full border border-emerald-100">
+            <span className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2.5 py-0.5 rounded-full border border-emerald-200">
               {chats.length} Active
             </span>
           </div>
 
-          <div className="p-3 border-b border-slate-200/60 bg-white">
+          {/* Search Bar */}
+          <div className="p-3 border-b border-slate-200 bg-white">
             <div className="relative">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
               <input
                 type="text"
                 placeholder="Search leads or phones..."
@@ -189,17 +191,21 @@ const CrmWhatsapp = () => {
             </div>
           </div>
 
+          {/* Chat Items */}
           <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
             {filteredChats.length > 0 ? (
               filteredChats.map((chat) => (
                 <div
                   key={chat.phone}
-                  onClick={() => setSelectedChat(chat)}
+                  onClick={() => {
+                    setSelectedChat(chat);
+                    setMobileView('chat');
+                  }}
                   className={`p-3.5 flex items-center gap-3 cursor-pointer transition-colors ${
-                    selectedChat?.phone === chat.phone ? 'bg-blue-50/60 border-l-4 border-blue-600' : 'hover:bg-slate-100/60'
+                    selectedChat?.phone === chat.phone ? 'bg-blue-50/70 border-l-4 border-blue-600' : 'hover:bg-slate-100/60'
                   }`}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-xs text-slate-700 shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-xs text-slate-700 shrink-0 shadow-sm">
                     {chat.name ? chat.name.slice(0, 2).toUpperCase() : <User className="w-4 h-4 text-slate-500" />}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -214,19 +220,26 @@ const CrmWhatsapp = () => {
             ) : (
               <div className="p-8 text-center text-slate-400 text-xs space-y-2">
                 <p>No conversations found.</p>
-                <p className="text-[11px]">Click <strong className="text-blue-600">"New Chat"</strong> above to message any phone number directly!</p>
+                <p className="text-[11px]">Click <strong className="text-blue-600">"New Chat"</strong> above to message any number directly!</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Right Area */}
-        <div className="flex-1 flex flex-col bg-white">
+        {/* Right Area: Active Chat Window */}
+        <div className={`flex-1 flex flex-col bg-white ${mobileView === 'list' ? 'hidden lg:flex' : 'flex'}`}>
           {selectedChat ? (
             <>
-              <div className="h-16 px-6 border-b border-slate-200/80 flex items-center justify-between bg-white">
+              {/* Chat Header */}
+              <div className="h-16 px-6 border-b border-slate-200 flex items-center justify-between bg-white">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 font-bold text-xs">
+                  <button 
+                    onClick={() => setMobileView('list')}
+                    className="lg:hidden p-1.5 -ml-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </button>
+                  <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 font-bold text-xs shadow-sm">
                     {selectedChat.name ? selectedChat.name.slice(0, 2).toUpperCase() : <User className="w-4 h-4" />}
                   </div>
                   <div>
@@ -238,7 +251,8 @@ const CrmWhatsapp = () => {
                 </div>
               </div>
 
-              <div className="flex-1 p-6 overflow-y-auto space-y-3 bg-slate-50/50">
+              {/* Messages Body */}
+              <div className="flex-1 p-6 overflow-y-auto space-y-3 bg-slate-50/40">
                 {loading && messages.length === 0 ? (
                   <div className="flex justify-center items-center h-full text-xs text-slate-400">Loading messages...</div>
                 ) : messages.length > 0 ? (
@@ -271,7 +285,8 @@ const CrmWhatsapp = () => {
                 <div ref={messagesEndRef} />
               </div>
 
-              <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-200/80 bg-white flex items-center gap-3">
+              {/* Message Input Footer */}
+              <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-200 bg-white flex items-center gap-3">
                 <input
                   type="text"
                   placeholder="Type a message to reply via WhatsApp..."
@@ -290,7 +305,7 @@ const CrmWhatsapp = () => {
               </form>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-400 text-xs">
+            <div className="flex-1 flex flex-col items-center justify-center text-slate-400 text-xs p-6">
               <MessageCircle className="w-12 h-12 text-slate-200 mb-3" />
               <p>Click "New Chat" above or select a conversation to start chatting</p>
             </div>
@@ -298,9 +313,10 @@ const CrmWhatsapp = () => {
         </div>
       </div>
 
+      {/* New Chat Modal Dialog */}
       {isNewChatModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-md p-6 space-y-4">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-md p-6 space-y-4 animate-in fade-in zoom-in duration-150">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-sm font-bold text-slate-900">Start New WhatsApp Chat</h3>
               <button type="button" onClick={() => setIsNewChatModalOpen(false)} className="text-slate-400 hover:text-slate-600">
@@ -315,7 +331,7 @@ const CrmWhatsapp = () => {
                   placeholder="e.g. Rahul Sharma"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500"
                 />
               </div>
               <div>
@@ -326,7 +342,7 @@ const CrmWhatsapp = () => {
                   value={newPhone}
                   onChange={(e) => setNewPhone(e.target.value)}
                   required
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500"
                 />
                 <p className="text-[10px] text-slate-400 mt-1">Include country code (e.g., 91 for India) without '+' symbol.</p>
               </div>
