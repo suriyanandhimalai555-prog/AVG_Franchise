@@ -4,6 +4,7 @@ import { User, Search, RefreshCw, Phone, Mail, Calendar, Eye, X, ShieldCheck, Pl
 const Leads = () => {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLead, setSelectedLead] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -37,6 +38,29 @@ const Leads = () => {
       console.error('Failed to load leads', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSyncWhatsApp = async () => {
+    try {
+      setSyncing(true);
+      const response = await fetch(`${import.meta.env.VITE_APP_BASE_URL}/api/leads/sync-whatsapp`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      const contentType = response.headers.get("content-type");
+      if (response.ok && contentType && contentType.includes("application/json")) {
+        const data = await response.json();
+        setLeads(data.leads);
+        alert(data.message || 'Successfully synced leads from WhatsApp interactions!');
+      } else {
+        alert('Failed to sync WhatsApp leads.');
+      }
+    } catch (error) {
+      console.error('Sync error:', error);
+      alert('An error occurred while syncing leads.');
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -97,9 +121,18 @@ const Leads = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Leads Management</h1>
-          <p className="text-xs text-slate-500 mt-1">View, track, and manage all your prospective client leads</p>
+          <p className="text-xs text-slate-500 mt-1">View, track, and sync prospective client leads from Meta & WhatsApp</p>
         </div>
         <div className="flex items-center gap-2.5">
+          <button 
+            type="button"
+            onClick={handleSyncWhatsApp}
+            disabled={syncing}
+            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-semibold rounded-xl shadow-sm transition-all flex items-center gap-2 active:scale-95"
+          >
+            <Calendar className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
+            <span>{syncing ? 'Syncing...' : 'Sync WhatsApp Leads'}</span>
+          </button>
           <button 
             type="button"
             onClick={() => setIsAddModalOpen(true)}
