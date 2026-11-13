@@ -22,7 +22,7 @@ export const createLead = async (req, res) => {
     
     const [lead, created] = await Lead.findOrCreate({
       where: { phone },
-      defaults: { name, email, status: status || 'Active', notes }
+      defaults: { name, email, status: status || 'Active', notes, leadSource: 'Manual' }
     });
 
     if (!created) {
@@ -51,10 +51,9 @@ export const deleteLead = async (req, res) => {
   }
 };
 
-// Auto-sync leads from WhatsApp chat history / Meta contacts
+// 1. Sync WhatsApp Chat Leads
 export const syncWhatsAppLeads = async (req, res) => {
   try {
-    // 1. Extract unique senders from your stored WhatsappMessages
     const messages = await WhatsappMessage.findAll({
       attributes: ['phone', 'name', 'createdAt'],
       order: [['createdAt', 'DESC']],
@@ -67,14 +66,13 @@ export const syncWhatsAppLeads = async (req, res) => {
           name: msg.name !== 'Customer' ? msg.name : 'WhatsApp Lead',
           phone: msg.phone,
           status: 'Active',
+          leadSource: 'WhatsApp',
           notes: 'Auto-synced from WhatsApp chat interaction',
         };
       }
     });
 
-    // 2. Insert them into your Leads table if they don't already exist
-    const leadEntries = Object.values(uniqueMap);
-    for (const leadData of leadEntries) {
+    for (const leadData of Object.values(uniqueMap)) {
       await Lead.findOrCreate({
         where: { phone: leadData.phone },
         defaults: leadData,
@@ -82,9 +80,84 @@ export const syncWhatsAppLeads = async (req, res) => {
     }
 
     const allLeads = await Lead.findAll({ order: [['createdAt', 'DESC']] });
-    return res.status(200).json({ message: 'Leads synced successfully', leads: allLeads });
+    return res.status(200).json({ message: 'WhatsApp leads synced successfully', leads: allLeads });
   } catch (error) {
     console.error('Sync WhatsApp Leads Error:', error);
-    return res.status(500).json({ error: 'Failed to sync leads from WhatsApp' });
+    return res.status(500).json({ error: 'Failed to sync WhatsApp leads' });
+  }
+};
+
+// 2. Sync Meta Embedded Forms / Lead Ads Leads
+export const syncMetaFormLeads = async (req, res) => {
+  try {
+    const WHATSAPP_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
+    const FORM_ID = req.body.formId || process.env.META_FORM_ID; // Optional environment or request form ID
+
+    if (!FORM_ID) {
+      return res.status(400).json({ error: 'Meta Form ID is required for syncing embedded form leads.' });
+    }
+
+    // Call Meta Graph API to get leads submitted through the specific form
+    const metaResponse = await axios.get(
+      `https://graph.facebook.com/v17.0/${FORM_ID}/leads`,
+      {
+        headers: {
+          Authorization: `Bearer ${WHATSAPP_TOKEN}`,
+        },
+      }
+    ).catch(err => {
+      console.error('Meta API Form Leads Error:', err.response?.data);
+      throw new Error(err.response?.data?.error?.message || 'Failed to fetch leads from Meta API');
+    });
+
+    const formLeads = metaResponse.data?.data || [];
+    let syncedCount = 0;
+
+    for (const item of formLeads) {
+      // Meta form field data comes as an array of field objects: [{name: 'full_name', values: [...]}, {name: 'phone_number', values: [...]}, ...]
+      const fieldData = item.field_data || [];
+      
+      let name = 'Meta Form Lead';
+      let phone = '';
+      let email = '';
+
+      fieldData.forEach(field => {
+        if (field.name === 'full_name' || field.name === 'name') {
+          name = field.values?.[0] || name;
+        }
+        if (field.name === 'phone_number' || field.name === 'phone') {
+          phone = field.values?.[0]?.replace(/\D/g, '') || '';
+        }
+        if (field.name === 'email') {
+          email = field.values?.[0] || '';
+        }
+      });
+
+      if (phone) {
+        const [lead, created] = await Lead.findOrCreate({
+          where: { phone },
+          defaults: {
+            name,
+            email,
+            status: 'Active',
+            leadSource: 'Meta Embedded Form',
+            formId: FORM_ID,
+            notes: `Submitted via Meta Embedded Form (ID: ${FORM_ID})`,
+          }
+        });
+
+        if (created) syncedCount++;
+      }
+    }
+
+    const allLeads = await Lead.findAll({ order: [['createdAt', 'DESC']] });
+    return res.status(200).json({ 
+      message: `Successfully synced ${syncedCount} new lead(s) from Meta Embedded Forms!`, 
+      leads: allLeads 
+    });
+
+  } catch (error) {
+    console.error('Sync Meta Form Error:', error);
+    return res.status(500).json({ error: error.message || 'Failed to sync Meta form leads' });
   }
 };

@@ -1,5 +1,5 @@
 import { DataTypes } from 'sequelize';
-import { sequelize } from './index.js'; // Adjust path to your main db instance
+import { sequelize } from './index.js';
 
 const Lead = sequelize.define('Lead', {
   id: {
@@ -22,10 +22,18 @@ const Lead = sequelize.define('Lead', {
   },
   status: {
     type: DataTypes.STRING,
-    defaultValue: 'Active', // e.g., Active, Converted, Pending
+    defaultValue: 'Active',
   },
   notes: {
     type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  leadSource: {
+    type: DataTypes.STRING,
+    defaultValue: 'WhatsApp / Manual', // 'Meta Form' or 'WhatsApp'
+  },
+  formId: {
+    type: DataTypes.STRING,
     allowNull: true,
   }
 }, {
