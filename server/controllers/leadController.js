@@ -89,11 +89,24 @@ export const syncWhatsAppLeads = async (req, res) => {
 
 // 2. Sync Meta Embedded Forms / Lead Ads Leads
 // Sync Meta Embedded Forms / Lead Ads Leads
+// Sync Meta Embedded Forms / Lead Ads Leads
 export const syncMetaFormLeads = async (req, res) => {
   try {
-    // Use the dedicated Page Access Token with leads_retrieval permission
-    const PAGE_TOKEN = process.env.META_PAGE_ACCESS_TOKEN || process.env.WHATSAPP_ACCESS_TOKEN;
+    // 1. Get token and trim whitespace/newlines to prevent "Malformed access token" errors
+    const rawToken = process.env.META_PAGE_ACCESS_TOKEN || process.env.WHATSAPP_ACCESS_TOKEN;
+    const PAGE_TOKEN = rawToken ? rawToken.trim() : '';
     const FORM_ID = req.body.formId || process.env.META_FORM_ID;
+
+    // Debugging logs to verify token and Form ID health in your server logs
+    console.log("--- Meta Lead Sync Debug ---");
+    console.log("Token Present:", !!PAGE_TOKEN, "Length:", PAGE_TOKEN.length);
+    console.log("Form ID Configured:", FORM_ID);
+
+    if (!PAGE_TOKEN || PAGE_TOKEN.length < 20) {
+      return res.status(400).json({ 
+        error: 'Access token is missing, empty, or malformed in environment variables.' 
+      });
+    }
 
     if (!FORM_ID || FORM_ID === 'your_meta_form_id_here') {
       return res.status(400).json({ 
@@ -101,6 +114,7 @@ export const syncMetaFormLeads = async (req, res) => {
       });
     }
 
+    // 2. Fetch leads from Meta Graph API
     const metaResponse = await axios.get(
       `https://graph.facebook.com/v21.0/${FORM_ID}/leads`,
       {
@@ -109,13 +123,16 @@ export const syncMetaFormLeads = async (req, res) => {
         }
       }
     ).catch(err => {
-      console.error('Meta API Form Leads Error:', err.response?.data);
-      throw new Error(err.response?.data?.error?.message || 'Failed to fetch leads from Meta API');
+      const errorData = err.response?.data?.error;
+      console.error('Meta API Form Leads Error Details:', errorData || err.message);
+      const userMessage = errorData?.message || 'Failed to fetch leads from Meta API';
+      throw new Error(userMessage);
     });
 
     const formLeads = metaResponse.data?.data || [];
     let syncedCount = 0;
 
+    // 3. Loop through leads and store them into PostgreSQL
     for (const item of formLeads) {
       const fieldData = item.field_data || [];
       let name = 'Meta Form Lead';
@@ -158,7 +175,7 @@ export const syncMetaFormLeads = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Sync Meta Form Error:', error);
+    console.error('Sync Meta Form Error:', error.message);
     return res.status(500).json({ error: error.message || 'Failed to sync Meta form leads' });
   }
 };
