@@ -2,13 +2,14 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, ShieldCheck, Users, Briefcase, MapPin, 
-  CheckSquare, LogOut, X, ChevronRight, BarChart3, User, AppWindowIcon, MessageCircle
+  CheckSquare, LogOut, X, ChevronRight, BarChart3, User, AppWindowIcon, MessageCircle, UserPlus
 } from 'lucide-react';
 import Logo from '../../assets/logo.png';
 
 const navItems = [
   { label: 'Dashboard', path: '/super-admin/dashboard', icon: LayoutDashboard },
   { label: 'CRM Whatsapp', path: '/super-admin/crm-whatsapp', icon: MessageCircle },
+  { label: 'Leads', path: '/super-admin/leads', icon: UserPlus },
   { label: 'Attendance Management', path: '/super-admin/attendance', icon: LayoutDashboard },
   { label: 'Branch Stock List', path: '/super-admin/branch-stock', icon: LayoutDashboard },
   { label: 'Role & Hierarchy', path: '/super-admin/roles', icon: ShieldCheck },

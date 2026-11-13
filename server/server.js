@@ -10,6 +10,7 @@ import attendanceRoutes from './routes/attendanceRoutes.js';
 import dailyReportRoutes from './routes/dailyReportRoutes.js';
 import whatsappRoutes from './routes/whatsappRoutes.js';
 import appSettingRoutes from './routes/appSettingRoutes.js';
+import leadRoutes from './routes/leadRoutes.js';
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/daily-reports', dailyReportRoutes);
 app.use('/api/whatsapp', whatsappRoutes);
 app.use('/api/app-settings', appSettingRoutes);
+app.use('/api/leads', leadRoutes);
 
 // Database connection & Auto-sync tables
 initDB();

@@ -21,6 +21,7 @@ import BranchStock from './pages/SuperAdmin/BranchStock';
 import SuperAdminProfile from './pages/SuperAdmin/SuperAdminProfile';
 import AppVersion from './pages/SuperAdmin/AppVersion';
 import CRMWhatsapp from './pages/SuperAdmin/CrmWhatsapp';
+import SuperAdminLeads from './pages/SuperAdmin/SuperAdminLeads';
 
 // Admin Layout & Pages
 import AdminLayout from './layouts/AdminLayout';
@@ -124,6 +125,7 @@ const App = () => {
             <Route path="profile" element={<SuperAdminProfile />} />
             <Route path="app-version" element={<AppVersion />} />
             <Route path="crm-whatsapp" element={<CRMWhatsapp />} />
+            <Route path="leads" element={<SuperAdminLeads />} />
           </Route>
         </Route>
 

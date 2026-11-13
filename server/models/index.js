@@ -4,12 +4,13 @@ import { Stock } from './stockModel.js';
 // import { StockRequest } from './stockRequestModel.js';
 import Attendance from './attendanceModel.js';
 import AppSetting from './AppSetting.js';
-import WhatsappMessage from './whatsappMessage.js'; // <-- 1. Import the WhatsApp model
+import WhatsappMessage from './whatsappMessage.js';
+import Lead from './lead.js'; // <-- 1. Import the Lead model
 
 const initDB = async () => {
   try {
     await sequelize.authenticate();
-    // alter: true will now automatically create the "WhatsappMessages" table in production
+    // alter: true will automatically create the "Leads" and "WhatsappMessages" tables in PostgreSQL
     await sequelize.sync({ alter: true });
     console.log('PostgreSQL Database & Models Synced.');
   } catch (error) {
@@ -24,6 +25,7 @@ export {
   // StockRequest, 
   Attendance, 
   AppSetting, 
-  WhatsappMessage, // <-- 2. Export it so it registers with Sequelize
+  WhatsappMessage, 
+  Lead, // <-- 2. Export it so it registers with Sequelize
   initDB 
 };
