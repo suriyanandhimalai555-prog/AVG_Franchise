@@ -88,35 +88,35 @@ export const syncWhatsAppLeads = async (req, res) => {
 };
 
 // 2. Sync Meta Embedded Forms / Lead Ads Leads
+// Sync Meta Embedded Forms / Lead Ads Leads
 export const syncMetaFormLeads = async (req, res) => {
   try {
     const WHATSAPP_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
-    const FORM_ID = req.body.formId || process.env.META_FORM_ID; // Optional environment or request form ID
+    const FORM_ID = req.body.formId || process.env.META_FORM_ID;
 
-    if (!FORM_ID) {
-      return res.status(400).json({ error: 'Meta Form ID is required for syncing embedded form leads.' });
+    // Check if a valid numeric Form ID is configured
+    if (!FORM_ID || FORM_ID === 'your_meta_form_id_here') {
+      return res.status(400).json({ 
+        error: 'Meta Form ID is not configured. Please set META_FORM_ID in your environment variables or pass a valid Form ID.' 
+      });
     }
 
-    // Call Meta Graph API to get leads submitted through the specific form
     const metaResponse = await axios.get(
       `https://graph.facebook.com/v17.0/${FORM_ID}/leads`,
       {
-        headers: {
-          Authorization: `Bearer ${WHATSAPP_TOKEN}`,
-        },
+        headers: { Authorization: `Bearer ${WHATSAPP_TOKEN}` },
       }
     ).catch(err => {
       console.error('Meta API Form Leads Error:', err.response?.data);
-      throw new Error(err.response?.data?.error?.message || 'Failed to fetch leads from Meta API');
+      const errorMsg = err.response?.data?.error?.message || 'Failed to fetch leads from Meta API';
+      throw new Error(errorMsg);
     });
 
     const formLeads = metaResponse.data?.data || [];
     let syncedCount = 0;
 
     for (const item of formLeads) {
-      // Meta form field data comes as an array of field objects: [{name: 'full_name', values: [...]}, {name: 'phone_number', values: [...]}, ...]
       const fieldData = item.field_data || [];
-      
       let name = 'Meta Form Lead';
       let phone = '';
       let email = '';
