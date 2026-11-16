@@ -87,89 +87,53 @@ export const syncWhatsAppLeads = async (req, res) => {
   }
 };
 
-// 2. Sync Meta Leads Across ALL Forms Automatically with Auto Page-Token Exchange
+// 2. Sync Meta Leads Across ALL Forms Automatically
 export const syncMetaFormLeads = async (req, res) => {
   try {
     const rawToken = process.env.META_PAGE_ACCESS_TOKEN || process.env.WHATSAPP_ACCESS_TOKEN;
     let PAGE_TOKEN = rawToken ? rawToken.trim() : '';
     const PAGE_ID = process.env.META_PAGE_ID;
 
-    console.log("--- Meta Multi-Form Lead Sync Debug ---");
-    console.log("Token Present:", !!PAGE_TOKEN, "Length:", PAGE_TOKEN.length);
-    console.log("Page ID Configured:", PAGE_ID);
-
-    if (!PAGE_TOKEN || PAGE_TOKEN.length < 20) {
-      return res.status(400).json({ 
-        error: 'Access token is missing, empty, or malformed in environment variables.' 
-      });
+    if (!PAGE_TOKEN || !PAGE_ID) {
+      return res.status(400).json({ error: 'Meta Page Access Token or Page ID is missing in environment variables.' });
     }
 
-    if (!PAGE_ID) {
-      return res.status(400).json({ 
-        error: 'Meta Page ID is not configured. Please set META_PAGE_ID in your environment variables.' 
-      });
-    }
-
-    // Automatically exchange User/System token for the correct Page Access Token
+    // Auto-exchange for Page Token if needed
     try {
       const tokenExchangeRes = await axios.get(`https://graph.facebook.com/v21.0/${PAGE_ID}`, {
-        params: {
-          fields: 'access_token',
-          access_token: PAGE_TOKEN
-        }
+        params: { fields: 'access_token', access_token: PAGE_TOKEN }
       });
       if (tokenExchangeRes.data?.access_token) {
         PAGE_TOKEN = tokenExchangeRes.data.access_token;
-        console.log("Successfully auto-exchanged for Page Access Token!");
       }
-    } catch (tokenErr) {
-      console.log("Note: Using token directly as provided (exchange skipped or not required).");
+    } catch (e) {
+      // Use raw token as fallback
     }
 
-    // Step A: Fetch ALL Lead Forms associated with this Facebook Page automatically
     let formsUrl = `https://graph.facebook.com/v21.0/${PAGE_ID}/leadgen_forms?access_token=${PAGE_TOKEN}`;
     let allForms = [];
 
     while (formsUrl) {
-      const formsResponse = await axios.get(formsUrl).catch(err => {
-        const errorData = err.response?.data?.error;
-        console.error('Meta API Fetch Forms Error:', errorData || err.message);
-        throw new Error(errorData?.message || 'Failed to fetch lead forms from Meta API');
-      });
-
-      const formsData = formsResponse.data;
-      if (formsData?.data) {
-        allForms = allForms.concat(formsData.data);
-      }
-      formsUrl = formsData?.paging?.next || null;
+      const formsResponse = await axios.get(formsUrl).catch(() => null);
+      if (!formsResponse) break;
+      allForms = allForms.concat(formsResponse.data?.data || []);
+      formsUrl = formsResponse.data?.paging?.next || null;
     }
-
-    console.log(`Found ${allForms.length} Lead Form(s) for Page ID ${PAGE_ID}`);
 
     let totalSyncedCount = 0;
 
-    // Step B: Loop through EVERY form found and fetch its leads with pagination
     for (const form of allForms) {
       const FORM_ID = form.id;
       let formLeads = [];
       let nextUrl = `https://graph.facebook.com/v21.0/${FORM_ID}/leads?access_token=${PAGE_TOKEN}&limit=100`;
 
       while (nextUrl) {
-        const metaResponse = await axios.get(nextUrl).catch(err => {
-          console.error(`Failed to fetch leads for Form ID ${FORM_ID}:`, err.response?.data?.error?.message || err.message);
-          return null;
-        });
-
+        const metaResponse = await axios.get(nextUrl).catch(() => null);
         if (!metaResponse) break;
-
-        const responseData = metaResponse.data;
-        if (responseData?.data) {
-          formLeads = formLeads.concat(responseData.data);
-        }
-        nextUrl = responseData?.paging?.next || null;
+        formLeads = formLeads.concat(metaResponse.data?.data || []);
+        nextUrl = metaResponse.data?.paging?.next || null;
       }
 
-      // Step C: Save each lead into PostgreSQL
       for (const item of formLeads) {
         const fieldData = item.field_data || [];
         let name = 'Meta Form Lead';
@@ -189,7 +153,7 @@ export const syncMetaFormLeads = async (req, res) => {
         });
 
         if (phone) {
-          const [lead, created] = await Lead.findOrCreate({
+          const [, created] = await Lead.findOrCreate({
             where: { phone },
             defaults: {
               name,
@@ -200,7 +164,6 @@ export const syncMetaFormLeads = async (req, res) => {
               notes: `Submitted via Meta Form (ID: ${FORM_ID})`,
             }
           });
-
           if (created) totalSyncedCount++;
         }
       }
@@ -218,7 +181,7 @@ export const syncMetaFormLeads = async (req, res) => {
   }
 };
 
-// 3. Verify Meta Webhook (Required by Meta during initial webhook setup)
+// 3. Verify Meta Webhook
 export const verifyMetaWebhook = (req, res) => {
   const VERIFY_TOKEN = process.env.META_WEBHOOK_VERIFY_TOKEN || 'my_secure_verify_token_123';
 
@@ -228,7 +191,7 @@ export const verifyMetaWebhook = (req, res) => {
 
   if (mode && token) {
     if (mode === 'subscribe' && token === VERIFY_TOKEN) {
-      console.log('WEBHOOK_VERIFIED');
+      console.log('WEBHOOK_VERIFIED successfully');
       return res.status(200).send(challenge);
     } else {
       return res.sendStatus(403);
@@ -237,27 +200,30 @@ export const verifyMetaWebhook = (req, res) => {
   return res.sendStatus(400);
 };
 
-// 4. Handle Real-time Incoming Meta Lead Webhooks
+// 4. Handle Real-time Incoming Meta Lead Webhooks with Diagnostic Logging
 export const handleMetaWebhook = async (req, res) => {
   try {
+    console.log('--- WEBHOOK EVENT RECEIVED ---', JSON.stringify(req.body, null, 2));
     const body = req.body;
 
     if (body.object === 'page') {
       for (const entry of body.entry) {
-        for (const change of entry.changes) {
+        for (const change of entry.changes || []) {
           if (change.field === 'leadgen') {
-            const leadgenId = change.value.leadgen_id;
-            const formId = change.value.form_id;
-            const pageId = change.value.page_id;
+            const leadgenId = change.value?.leadgen_id;
+            const formId = change.value?.form_id;
+            const pageId = change.value?.page_id;
 
-            console.log(`Real-time Lead Received! Lead ID: ${leadgenId}, Form ID: ${formId}`);
+            console.log(`Processing Real-time Lead -> Lead ID: ${leadgenId}, Form ID: ${formId}`);
 
             const rawToken = process.env.META_PAGE_ACCESS_TOKEN || process.env.WHATSAPP_ACCESS_TOKEN;
             let PAGE_TOKEN = rawToken ? rawToken.trim() : '';
 
-            if (!PAGE_TOKEN) continue;
+            if (!PAGE_TOKEN) {
+              console.error('Webhook Error: Page Access Token missing.');
+              continue;
+            }
 
-            // Auto-exchange for Page Token if necessary
             try {
               const tokenRes = await axios.get(`https://graph.facebook.com/v21.0/${pageId}`, {
                 params: { fields: 'access_token', access_token: PAGE_TOKEN }
@@ -266,14 +232,14 @@ export const handleMetaWebhook = async (req, res) => {
                 PAGE_TOKEN = tokenRes.data.access_token;
               }
             } catch (e) {
-              // Fallback to raw token
+              // Fallback to existing token
             }
 
-            // Fetch the specific lead details instantly using the leadgen_id
+            // Fetch lead details using leadgen_id
             const leadResponse = await axios.get(`https://graph.facebook.com/v21.0/${leadgenId}`, {
               params: { access_token: PAGE_TOKEN }
             }).catch(err => {
-              console.error('Failed to fetch individual lead details:', err.message);
+              console.error('Failed to fetch individual lead from Graph API:', err.response?.data?.error || err.message);
               return null;
             });
 
@@ -308,19 +274,18 @@ export const handleMetaWebhook = async (req, res) => {
                     notes: `Submitted instantly via Meta Webhook (Form ID: ${formId})`,
                   }
                 });
-                console.log(`Successfully saved real-time lead: ${name} (${phone})`);
+                console.log(`Successfully saved real-time webhook lead: ${name} (${phone})`);
               }
             }
           }
         }
       }
-      // Always return 200 OK quickly so Meta knows you received it
       return res.status(200).send('EVENT_RECEIVED');
     } else {
       return res.sendStatus(404);
     }
   } catch (error) {
-    console.error('Webhook Error:', error.message);
+    console.error('Webhook Processing Exception:', error.message);
     return res.status(500).json({ error: error.message });
   }
 };
