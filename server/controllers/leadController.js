@@ -217,3 +217,110 @@ export const syncMetaFormLeads = async (req, res) => {
     return res.status(500).json({ error: error.message || 'Failed to sync Meta form leads' });
   }
 };
+
+// 3. Verify Meta Webhook (Required by Meta during initial webhook setup)
+export const verifyMetaWebhook = (req, res) => {
+  const VERIFY_TOKEN = process.env.META_WEBHOOK_VERIFY_TOKEN || 'my_secure_verify_token_123';
+
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
+
+  if (mode && token) {
+    if (mode === 'subscribe' && token === VERIFY_TOKEN) {
+      console.log('WEBHOOK_VERIFIED');
+      return res.status(200).send(challenge);
+    } else {
+      return res.sendStatus(403);
+    }
+  }
+  return res.sendStatus(400);
+};
+
+// 4. Handle Real-time Incoming Meta Lead Webhooks
+export const handleMetaWebhook = async (req, res) => {
+  try {
+    const body = req.body;
+
+    if (body.object === 'page') {
+      for (const entry of body.entry) {
+        for (const change of entry.changes) {
+          if (change.field === 'leadgen') {
+            const leadgenId = change.value.leadgen_id;
+            const formId = change.value.form_id;
+            const pageId = change.value.page_id;
+
+            console.log(`Real-time Lead Received! Lead ID: ${leadgenId}, Form ID: ${formId}`);
+
+            const rawToken = process.env.META_PAGE_ACCESS_TOKEN || process.env.WHATSAPP_ACCESS_TOKEN;
+            let PAGE_TOKEN = rawToken ? rawToken.trim() : '';
+
+            if (!PAGE_TOKEN) continue;
+
+            // Auto-exchange for Page Token if necessary
+            try {
+              const tokenRes = await axios.get(`https://graph.facebook.com/v21.0/${pageId}`, {
+                params: { fields: 'access_token', access_token: PAGE_TOKEN }
+              });
+              if (tokenRes.data?.access_token) {
+                PAGE_TOKEN = tokenRes.data.access_token;
+              }
+            } catch (e) {
+              // Fallback to raw token
+            }
+
+            // Fetch the specific lead details instantly using the leadgen_id
+            const leadResponse = await axios.get(`https://graph.facebook.com/v21.0/${leadgenId}`, {
+              params: { access_token: PAGE_TOKEN }
+            }).catch(err => {
+              console.error('Failed to fetch individual lead details:', err.message);
+              return null;
+            });
+
+            if (leadResponse && leadResponse.data) {
+              const item = leadResponse.data;
+              const fieldData = item.field_data || [];
+              let name = 'Meta Form Lead';
+              let phone = '';
+              let email = '';
+
+              fieldData.forEach(field => {
+                if (field.name === 'full_name' || field.name === 'name') {
+                  name = field.values?.[0] || name;
+                }
+                if (field.name === 'phone_number' || field.name === 'phone') {
+                  phone = field.values?.[0]?.replace(/\D/g, '') || '';
+                }
+                if (field.name === 'email') {
+                  email = field.values?.[0] || '';
+                }
+              });
+
+              if (phone) {
+                await Lead.findOrCreate({
+                  where: { phone },
+                  defaults: {
+                    name,
+                    email,
+                    status: 'Active',
+                    leadSource: 'Meta Embedded Form',
+                    formId: formId,
+                    notes: `Submitted instantly via Meta Webhook (Form ID: ${formId})`,
+                  }
+                });
+                console.log(`Successfully saved real-time lead: ${name} (${phone})`);
+              }
+            }
+          }
+        }
+      }
+      // Always return 200 OK quickly so Meta knows you received it
+      return res.status(200).send('EVENT_RECEIVED');
+    } else {
+      return res.sendStatus(404);
+    }
+  } catch (error) {
+    console.error('Webhook Error:', error.message);
+    return res.status(500).json({ error: error.message });
+  }
+};
