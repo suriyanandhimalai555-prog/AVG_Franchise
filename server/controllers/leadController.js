@@ -87,12 +87,12 @@ export const syncWhatsAppLeads = async (req, res) => {
   }
 };
 
-// 2. Sync Meta Embedded Forms / Lead Ads Leads
+// 2. Sync Meta Leads Across ALL Forms Automatically with Auto Page-Token Exchange
 export const syncMetaFormLeads = async (req, res) => {
   try {
     const rawToken = process.env.META_PAGE_ACCESS_TOKEN || process.env.WHATSAPP_ACCESS_TOKEN;
-    const PAGE_TOKEN = rawToken ? rawToken.trim() : '';
-    const PAGE_ID = process.env.META_PAGE_ID; // Your Facebook Page ID
+    let PAGE_TOKEN = rawToken ? rawToken.trim() : '';
+    const PAGE_ID = process.env.META_PAGE_ID;
 
     console.log("--- Meta Multi-Form Lead Sync Debug ---");
     console.log("Token Present:", !!PAGE_TOKEN, "Length:", PAGE_TOKEN.length);
@@ -108,6 +108,22 @@ export const syncMetaFormLeads = async (req, res) => {
       return res.status(400).json({ 
         error: 'Meta Page ID is not configured. Please set META_PAGE_ID in your environment variables.' 
       });
+    }
+
+    // Automatically exchange User/System token for the correct Page Access Token
+    try {
+      const tokenExchangeRes = await axios.get(`https://graph.facebook.com/v21.0/${PAGE_ID}`, {
+        params: {
+          fields: 'access_token',
+          access_token: PAGE_TOKEN
+        }
+      });
+      if (tokenExchangeRes.data?.access_token) {
+        PAGE_TOKEN = tokenExchangeRes.data.access_token;
+        console.log("Successfully auto-exchanged for Page Access Token!");
+      }
+    } catch (tokenErr) {
+      console.log("Note: Using token directly as provided (exchange skipped or not required).");
     }
 
     // Step A: Fetch ALL Lead Forms associated with this Facebook Page automatically
@@ -131,7 +147,6 @@ export const syncMetaFormLeads = async (req, res) => {
     console.log(`Found ${allForms.length} Lead Form(s) for Page ID ${PAGE_ID}`);
 
     let totalSyncedCount = 0;
-    let grandTotalFormLeads = 0;
 
     // Step B: Loop through EVERY form found and fetch its leads with pagination
     for (const form of allForms) {
@@ -153,8 +168,6 @@ export const syncMetaFormLeads = async (req, res) => {
         }
         nextUrl = responseData?.paging?.next || null;
       }
-
-      grandTotalFormLeads += formLeads.length;
 
       // Step C: Save each lead into PostgreSQL
       for (const item of formLeads) {
