@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Search, RefreshCw, Phone, Mail, Calendar, Eye, X, ShieldCheck, Plus, Trash2, FileText } from 'lucide-react';
+import { User, Search, RefreshCw, Phone, Mail, Calendar, Eye, X, ShieldCheck, Plus, Trash2, FileText, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 const Leads = () => {
   const [leads, setLeads] = useState([]);
@@ -10,6 +10,13 @@ const Leads = () => {
   const [selectedLead, setSelectedLead] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
+  // Notification Banner State (replaces alert())
+  const [notification, setNotification] = useState({ type: '', message: '' });
+
+  // Pagination States
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
   // Form states for creating a new lead
   const [newLeadData, setNewLeadData] = useState({
     name: '',
@@ -19,14 +26,34 @@ const Leads = () => {
     notes: ''
   });
 
-  // Fetch leads on mount
+  // Fetch leads on mount and setup auto-polling every 10 seconds for real-time UI updates
   useEffect(() => {
-    fetchLeads();
+    fetchLeads(false); // Initial load with loading spinner
+
+    const intervalId = setInterval(() => {
+      fetchLeads(true); // Silent background fetch without showing the loader spinner
+    }, 10000); // Polls every 10 seconds
+
+    return () => clearInterval(intervalId); // Cleanup interval on unmount
   }, []);
 
-  const fetchLeads = async () => {
+  // Auto-hide notification banner after 4 seconds
+  useEffect(() => {
+    if (notification.message) {
+      const timer = setTimeout(() => {
+        setNotification({ type: '', message: '' });
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
+
+  const showNotification = (type, message) => {
+    setNotification({ type, message });
+  };
+
+  const fetchLeads = async (isBackground = false) => {
     try {
-      setLoading(true);
+      if (!isBackground) setLoading(true);
       const response = await fetch(`${import.meta.env.VITE_APP_BASE_URL}/api/leads`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
@@ -38,7 +65,7 @@ const Leads = () => {
     } catch (error) {
       console.error('Failed to load leads', error);
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
   };
 
@@ -53,13 +80,13 @@ const Leads = () => {
       if (response.ok && contentType && contentType.includes("application/json")) {
         const data = await response.json();
         setLeads(data.leads);
-        alert(data.message || 'Successfully synced leads from WhatsApp interactions!');
+        showNotification('success', data.message || 'Successfully synced leads from WhatsApp interactions!');
       } else {
-        alert('Failed to sync WhatsApp leads.');
+        showNotification('error', 'Failed to sync WhatsApp leads.');
       }
     } catch (error) {
       console.error('Sync error:', error);
-      alert('An error occurred while syncing WhatsApp leads.');
+      showNotification('error', 'An error occurred while syncing WhatsApp leads.');
     } finally {
       setSyncingWhatsapp(false);
     }
@@ -74,20 +101,20 @@ const Leads = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}` 
         },
-        body: JSON.stringify({ formId: import.meta.env.VITE_META_FORM_ID }) // Optional if set in backend env
+        body: JSON.stringify({ formId: import.meta.env.VITE_META_FORM_ID })
       });
       const contentType = response.headers.get("content-type");
       if (response.ok && contentType && contentType.includes("application/json")) {
         const data = await response.json();
         setLeads(data.leads);
-        alert(data.message || 'Successfully synced leads from Meta Embedded Forms!');
+        showNotification('success', data.message || 'Successfully synced leads from Meta Forms!');
       } else {
         const err = await response.json().catch(() => ({}));
-        alert(err.error || 'Failed to sync Meta form leads.');
+        showNotification('error', err.error || 'Failed to sync Meta form leads.');
       }
     } catch (error) {
       console.error('Sync Meta form error:', error);
-      alert('An error occurred while syncing Meta form leads.');
+      showNotification('error', 'An error occurred while syncing Meta form leads.');
     } finally {
       setSyncingMetaForm(false);
     }
@@ -109,12 +136,14 @@ const Leads = () => {
         setIsAddModalOpen(false);
         setNewLeadData({ name: '', phone: '', email: '', status: 'Active', notes: '' });
         fetchLeads();
+        showNotification('success', 'Lead created successfully!');
       } else {
         const err = await response.json().catch(() => ({}));
-        alert(err.error || 'Failed to create lead');
+        showNotification('error', err.error || 'Failed to create lead');
       }
     } catch (error) {
       console.error('Error creating lead:', error);
+      showNotification('error', 'An error occurred while creating the lead.');
     }
   };
 
@@ -129,11 +158,13 @@ const Leads = () => {
       if (response.ok) {
         setSelectedLead(null);
         fetchLeads();
+        showNotification('success', 'Lead deleted successfully!');
       } else {
-        alert('Failed to delete lead');
+        showNotification('error', 'Failed to delete lead');
       }
     } catch (error) {
       console.error('Error deleting lead:', error);
+      showNotification('error', 'An error occurred while deleting the lead.');
     }
   };
 
@@ -144,8 +175,44 @@ const Leads = () => {
     lead.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredLeads.length / rowsPerPage) || 1;
+  const indexOfLastRow = currentPage * rowsPerPage;
+  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+  const currentLeads = filteredLeads.slice(indexOfFirstRow, indexOfLastRow);
+
+  // Reset pagination when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   return (
     <div className="space-y-6">
+      {/* Custom Popup / Notification Banner */}
+      {notification.message && (
+        <div className={`p-4 rounded-2xl border text-xs font-semibold flex items-center justify-between shadow-sm transition-all animate-in fade-in slide-in-from-top-2 ${
+          notification.type === 'success' 
+            ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
+            : 'bg-red-50 border-red-200 text-red-800'
+        }`}>
+          <div className="flex items-center gap-2.5">
+            {notification.type === 'success' ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            ) : (
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+            )}
+            <span>{notification.message}</span>
+          </div>
+          <button 
+            type="button" 
+            onClick={() => setNotification({ type: '', message: '' })} 
+            className="text-slate-400 hover:text-slate-600 p-1"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Top Header Title & Actions */}
       <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
         <div>
@@ -181,7 +248,7 @@ const Leads = () => {
           </button>
           <button 
             type="button"
-            onClick={fetchLeads}
+            onClick={() => fetchLeads(false)}
             className="px-3.5 py-2 bg-white border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl shadow-sm hover:bg-slate-50 transition-all flex items-center gap-2"
           >
             <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${loading ? 'animate-spin' : ''}`} />
@@ -228,8 +295,8 @@ const Leads = () => {
                     Loading leads data...
                   </td>
                 </tr>
-              ) : filteredLeads.length > 0 ? (
-                filteredLeads.map((lead) => (
+              ) : currentLeads.length > 0 ? (
+                currentLeads.map((lead) => (
                   <tr key={lead.id || lead.phone} className="hover:bg-slate-50/60 transition-colors">
                     <td className="py-4 px-6 font-semibold text-slate-900 flex items-center gap-3">
                       <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center font-bold text-[#0437cc] text-xs shrink-0 shadow-sm">
@@ -283,6 +350,51 @@ const Leads = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination Bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between p-4 bg-slate-50/50 border-t border-slate-200 gap-3 text-xs text-slate-600">
+          <div className="flex items-center gap-2">
+            <span>Show</span>
+            <select
+              value={rowsPerPage}
+              onChange={(e) => {
+                setRowsPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-slate-800 focus:outline-none focus:border-blue-500 font-medium"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+            <span>entries per page</span>
+          </div>
+
+          <div className="font-medium">
+            Showing {filteredLeads.length > 0 ? indexOfFirstRow + 1 : 0} to {Math.min(indexOfLastRow, filteredLeads.length)} of {filteredLeads.length} leads
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-slate-700"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="px-3 py-1 font-semibold bg-white border border-slate-200 rounded-lg text-slate-800">
+              {currentPage} / {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-slate-700"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 
