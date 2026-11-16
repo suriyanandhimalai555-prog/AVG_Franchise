@@ -92,11 +92,11 @@ export const syncMetaFormLeads = async (req, res) => {
   try {
     const rawToken = process.env.META_PAGE_ACCESS_TOKEN || process.env.WHATSAPP_ACCESS_TOKEN;
     const PAGE_TOKEN = rawToken ? rawToken.trim() : '';
-    const FORM_ID = req.body.formId || process.env.META_FORM_ID;
+    const PAGE_ID = process.env.META_PAGE_ID; // Your Facebook Page ID
 
-    console.log("--- Meta Lead Sync Debug ---");
+    console.log("--- Meta Multi-Form Lead Sync Debug ---");
     console.log("Token Present:", !!PAGE_TOKEN, "Length:", PAGE_TOKEN.length);
-    console.log("Form ID Configured:", FORM_ID);
+    console.log("Page ID Configured:", PAGE_ID);
 
     if (!PAGE_TOKEN || PAGE_TOKEN.length < 20) {
       return res.status(400).json({ 
@@ -104,80 +104,103 @@ export const syncMetaFormLeads = async (req, res) => {
       });
     }
 
-    if (!FORM_ID || FORM_ID === 'your_meta_form_id_here') {
+    if (!PAGE_ID) {
       return res.status(400).json({ 
-        error: 'Meta Form ID is not configured. Please set META_FORM_ID in your environment variables.' 
+        error: 'Meta Page ID is not configured. Please set META_PAGE_ID in your environment variables.' 
       });
     }
 
-    let allFormLeads = [];
-    let nextUrl = `https://graph.facebook.com/v21.0/${FORM_ID}/leads`;
-    
-    // Pagination Loop to fetch all pages of leads from Meta
-    while (nextUrl) {
-      const metaResponse = await axios.get(nextUrl, {
-        params: nextUrl.includes('access_token') ? {} : { access_token: PAGE_TOKEN, limit: 100 }
-      }).catch(err => {
+    // Step A: Fetch ALL Lead Forms associated with this Facebook Page automatically
+    let formsUrl = `https://graph.facebook.com/v21.0/${PAGE_ID}/leadgen_forms?access_token=${PAGE_TOKEN}`;
+    let allForms = [];
+
+    while (formsUrl) {
+      const formsResponse = await axios.get(formsUrl).catch(err => {
         const errorData = err.response?.data?.error;
-        console.error('Meta API Form Leads Error Details:', errorData || err.message);
-        throw new Error(errorData?.message || 'Failed to fetch leads from Meta API');
+        console.error('Meta API Fetch Forms Error:', errorData || err.message);
+        throw new Error(errorData?.message || 'Failed to fetch lead forms from Meta API');
       });
 
-      const responseData = metaResponse.data;
-      if (responseData?.data) {
-        allFormLeads = allFormLeads.concat(responseData.data);
+      const formsData = formsResponse.data;
+      if (formsData?.data) {
+        allForms = allForms.concat(formsData.data);
+      }
+      formsUrl = formsData?.paging?.next || null;
+    }
+
+    console.log(`Found ${allForms.length} Lead Form(s) for Page ID ${PAGE_ID}`);
+
+    let totalSyncedCount = 0;
+    let grandTotalFormLeads = 0;
+
+    // Step B: Loop through EVERY form found and fetch its leads with pagination
+    for (const form of allForms) {
+      const FORM_ID = form.id;
+      let formLeads = [];
+      let nextUrl = `https://graph.facebook.com/v21.0/${FORM_ID}/leads?access_token=${PAGE_TOKEN}&limit=100`;
+
+      while (nextUrl) {
+        const metaResponse = await axios.get(nextUrl).catch(err => {
+          console.error(`Failed to fetch leads for Form ID ${FORM_ID}:`, err.response?.data?.error?.message || err.message);
+          return null;
+        });
+
+        if (!metaResponse) break;
+
+        const responseData = metaResponse.data;
+        if (responseData?.data) {
+          formLeads = formLeads.concat(responseData.data);
+        }
+        nextUrl = responseData?.paging?.next || null;
       }
 
-      // Check if there's a next page cursor link provided by Meta
-      nextUrl = responseData?.paging?.next || null;
-    }
+      grandTotalFormLeads += formLeads.length;
 
-    let syncedCount = 0;
+      // Step C: Save each lead into PostgreSQL
+      for (const item of formLeads) {
+        const fieldData = item.field_data || [];
+        let name = 'Meta Form Lead';
+        let phone = '';
+        let email = '';
 
-    // Loop through all collected leads and store them into PostgreSQL
-    for (const item of allFormLeads) {
-      const fieldData = item.field_data || [];
-      let name = 'Meta Form Lead';
-      let phone = '';
-      let email = '';
-
-      fieldData.forEach(field => {
-        if (field.name === 'full_name' || field.name === 'name') {
-          name = field.values?.[0] || name;
-        }
-        if (field.name === 'phone_number' || field.name === 'phone') {
-          phone = field.values?.[0]?.replace(/\D/g, '') || '';
-        }
-        if (field.name === 'email') {
-          email = field.values?.[0] || '';
-        }
-      });
-
-      if (phone) {
-        const [lead, created] = await Lead.findOrCreate({
-          where: { phone },
-          defaults: {
-            name,
-            email,
-            status: 'Active',
-            leadSource: 'Meta Embedded Form',
-            formId: FORM_ID,
-            notes: `Submitted via Meta Embedded Form (ID: ${FORM_ID})`,
+        fieldData.forEach(field => {
+          if (field.name === 'full_name' || field.name === 'name') {
+            name = field.values?.[0] || name;
+          }
+          if (field.name === 'phone_number' || field.name === 'phone') {
+            phone = field.values?.[0]?.replace(/\D/g, '') || '';
+          }
+          if (field.name === 'email') {
+            email = field.values?.[0] || '';
           }
         });
 
-        if (created) syncedCount++;
+        if (phone) {
+          const [lead, created] = await Lead.findOrCreate({
+            where: { phone },
+            defaults: {
+              name,
+              email,
+              status: 'Active',
+              leadSource: 'Meta Embedded Form',
+              formId: FORM_ID,
+              notes: `Submitted via Meta Form (ID: ${FORM_ID})`,
+            }
+          });
+
+          if (created) totalSyncedCount++;
+        }
       }
     }
 
     const allLeads = await Lead.findAll({ order: [['createdAt', 'DESC']] });
     return res.status(200).json({ 
-      message: `Successfully synced ${syncedCount} new lead(s) out of ${allFormLeads.length} total form leads from Meta!`, 
+      message: `Successfully synced ${totalSyncedCount} new lead(s) across ${allForms.length} Meta form(s)!`, 
       leads: allLeads 
     });
 
   } catch (error) {
-    console.error('Sync Meta Form Error:', error.message);
+    console.error('Sync Meta Multi-Form Error:', error.message);
     return res.status(500).json({ error: error.message || 'Failed to sync Meta form leads' });
   }
 };
