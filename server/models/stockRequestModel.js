@@ -26,9 +26,10 @@ export const StockRequest = sequelize.define('StockRequest', {
     },
   },
   district: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
+  type: DataTypes.STRING,
+  allowNull: false,
+  defaultValue: 'Not Specified', // <-- prevents 23502 on existing rows
+},
   stock_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
