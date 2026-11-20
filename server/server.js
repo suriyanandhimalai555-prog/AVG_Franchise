@@ -16,33 +16,56 @@ dotenv.config();
 
 const app = express();
 
-const normalizeOrigin = (url = '') => url.trim().replace(/\/+$/, '');
+const normalizeOrigin = (url = '') =>
+  url
+    .trim()
+    .replace(/^["']|["']$/g, '')
+    .replace(/\/+$/, '');
+
+const rawOrigins = [
+  'https://avgfranchise.com',
+  'http://localhost:5173',
+  'http://localhost:3000',
+  ...(process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',') : []),
+];
 
 const allowedOrigins = new Set(
-  [
-    'https://avgfranchise.com',
-    'http://localhost:5173',
-    'http://localhost:3000',
-    process.env.CLIENT_URL,
-  ]
-    .map(normalizeOrigin)
-    .filter(Boolean)
+  rawOrigins.map(normalizeOrigin).filter(Boolean)
 );
 
 const corsOptions = {
   origin(origin, callback) {
-    if (!origin || allowedOrigins.has(normalizeOrigin(origin))) {
+    // Allow non-browser requests (like curl, health checks, server-to-server) with no Origin header
+    if (!origin) {
       return callback(null, true);
     }
-    return callback(null, false);
+
+    const cleanedOrigin = normalizeOrigin(origin);
+    if (allowedOrigins.has(cleanedOrigin)) {
+      return callback(null, true);
+    }
+
+    console.warn(`Blocked CORS origin: ${origin}`);
+    return callback(new Error(`Not allowed by CORS: ${origin}`));
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
+  optionsSuccessStatus: 204,
 };
 
+// Apply CORS before body parsers and routes
 app.use(cors(corsOptions));
+
+// Express 5 compatible preflight handler
+app.options('/{*splat}', cors(corsOptions));
+
 app.use(express.json());
+
+// Health check
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -58,10 +81,12 @@ app.use('/api/leads', leadRoutes);
 // Error handler
 app.use((err, req, res, next) => {
   console.error('Unhandled Server Error:', err);
-  res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
+  res.status(err.status || 500).json({
+    error: err.message || 'Internal Server Error',
+  });
 });
 
-const PORT = process.env.PORT || 8080;
+const PORT = Number(process.env.PORT) || 8080;
 
 const startServer = async () => {
   try {
@@ -70,8 +95,9 @@ const startServer = async () => {
     console.error('Database sync error:', err.message);
   }
 
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
+    console.log('Allowed CORS origins:', [...allowedOrigins]);
   });
 };
 
