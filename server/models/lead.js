@@ -30,12 +30,24 @@ const Lead = sequelize.define('Lead', {
   },
   leadSource: {
     type: DataTypes.STRING,
-    defaultValue: 'WhatsApp / Manual', // 'Meta Form' or 'WhatsApp'
+    defaultValue: 'WhatsApp / Manual',
   },
   formId: {
     type: DataTypes.STRING,
     allowNull: true,
-  }
+  },
+  campaignName: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  adName: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  rawFields: {
+    type: DataTypes.JSONB,
+    allowNull: true,
+  },
 }, {
   timestamps: true,
 });
