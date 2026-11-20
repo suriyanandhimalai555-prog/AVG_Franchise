@@ -23,21 +23,19 @@ const allowedOrigins = [
 ];
 
 const corsOptions = {
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like Postman / server-to-server / Meta webhooks)
+  origin(origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-    return callback(new Error(`Not allowed by CORS: ${origin}`));
+    return callback(null, false);
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 };
 
-// Middlewares
+// CORS middleware first (handles OPTIONS preflight automatically)
 app.use(cors(corsOptions));
-app.options(/.*/, cors(corsOptions));
 app.use(express.json());
 
 // Routes
@@ -51,10 +49,24 @@ app.use('/api/whatsapp', whatsappRoutes);
 app.use('/api/app-settings', appSettingRoutes);
 app.use('/api/leads', leadRoutes);
 
-// Database connection & Auto-sync tables
-initDB();
+// Global error handler (ensures errors return JSON, not crash silently)
+app.use((err, req, res, next) => {
+  console.error('Unhandled Server Error:', err);
+  res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
+});
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+
+const startServer = async () => {
+  try {
+    await initDB();
+  } catch (err) {
+    console.error('Database sync warning on startup:', err.message);
+  }
+
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+};
+
+startServer();
