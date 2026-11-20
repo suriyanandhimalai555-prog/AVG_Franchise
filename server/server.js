@@ -16,26 +16,8 @@ dotenv.config();
 
 const app = express();
 
-const allowedOrigins = [
-  'https://franchise.avgprimetech.com',
-  'http://localhost:5173',
-  'http://localhost:3000',
-];
-
-const corsOptions = {
-  origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    return callback(null, false);
-  },
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-};
-
-// CORS middleware first (handles OPTIONS preflight automatically)
-app.use(cors(corsOptions));
+// Middlewares
+app.use(cors());
 app.use(express.json());
 
 // Routes
@@ -49,24 +31,10 @@ app.use('/api/whatsapp', whatsappRoutes);
 app.use('/api/app-settings', appSettingRoutes);
 app.use('/api/leads', leadRoutes);
 
-// Global error handler (ensures errors return JSON, not crash silently)
-app.use((err, req, res, next) => {
-  console.error('Unhandled Server Error:', err);
-  res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
-});
+// Database connection & Auto-sync tables
+initDB();
 
 const PORT = process.env.PORT || 5000;
-
-const startServer = async () => {
-  try {
-    await initDB();
-  } catch (err) {
-    console.error('Database sync warning on startup:', err.message);
-  }
-
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-};
-
-startServer();
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
